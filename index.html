@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-void-func-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-launch-1" />
 </head>
 <body>
 <main id="app" class="app">
@@ -232,20 +232,50 @@
 
   <!-- PERMISSION -->
   <section id="permissionGate" class="permission-gate">
-    <div class="void-logo mono">V·O·I·D</div>
-    <div class="build-badge mono">BUILD 0.4 FUNCTION</div>
-    <div class="gate-copy">
-      <p class="mono">PRO TOOLS. FILM SOUL.</p>
-      <h1>Choose the film.<br>Take the shot.</h1>
-      <p>Live film looks, tactile controls and a camera-first interface.</p>
-      <button id="startCameraButton" class="mono">OPEN CAMERA</button>
-      <small>Photos stay on your device in this prototype.</small>
+    <div class="launch-frame" aria-hidden="true">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <span class="axis axis-x"></span><span class="axis axis-y"></span>
     </div>
+
+    <header class="launch-header">
+      <div>
+        <div class="launch-brand dot-title">VOID</div>
+        <p class="mono">CAMERA SYSTEM / 01</p>
+      </div>
+      <div class="launch-build mono">BUILD 0.5</div>
+    </header>
+
+    <div class="launch-center">
+      <div class="launch-orbit" aria-hidden="true">
+        <span class="orbit o1"></span><span class="orbit o2"></span><span class="orbit o3"></span>
+        <span class="orbit-mark m1"></span><span class="orbit-mark m2"></span><span class="orbit-mark m3"></span><span class="orbit-mark m4"></span>
+      </div>
+
+      <button id="startCameraButton" class="launch-button" aria-label="Enter camera">
+        <span class="launch-button-ring">
+          <span class="launch-aperture" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+        </span>
+        <span class="launch-label">
+          <b class="mono">ENTER</b>
+          <small class="mono">CAMERA</small>
+        </span>
+      </button>
+
+      <p class="launch-hint mono">TAP TO INITIALISE SENSOR</p>
+    </div>
+
+    <footer class="launch-footer">
+      <div class="launch-status mono"><span class="status-dot"></span> FILM ENGINE READY</div>
+      <div class="launch-status mono">LOCAL / PRIVATE</div>
+      <p class="mono">LIVE LOOKS · PRO CONTROLS · NO UPLOAD</p>
+    </footer>
   </section>
 
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./app.js?v=20260925-void-func-1" defer></script>
+<script src="./app.js?v=20260925-void-launch-1" defer></script>
 </body>
 </html>
