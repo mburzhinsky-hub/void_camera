@@ -15,16 +15,16 @@ let presetFrameData='';
 const favorites=new Set();
 
 const looks=[
- {name:'FUJI CLASSIC',cat:'FUJI',desc:'Rich tones, true to life',filter:'contrast(.97) saturate(.92) sepia(.09) hue-rotate(-4deg)'},
- {name:'FUJI SOFT',cat:'FUJI',desc:'Muted contrast, gentle film',filter:'contrast(.90) saturate(.82) brightness(1.03)'},
- {name:'FUJI STREET',cat:'FUJI',desc:'Bold colours, urban soul',filter:'contrast(1.10) saturate(.94) hue-rotate(-7deg)'},
- {name:'FUJI WARM',cat:'FUJI',desc:'Golden skin, nostalgic feel',filter:'contrast(.98) saturate(1.02) sepia(.18) hue-rotate(-5deg)'},
- {name:'FUJI COOL',cat:'FUJI',desc:'Crisp tones, modern look',filter:'contrast(1.03) saturate(.88) hue-rotate(8deg)'},
- {name:'FUJI MONO',cat:'B&W',desc:'Timeless black and white',filter:'grayscale(1) contrast(1.14)'},
- {name:'PORTRAIT 400',cat:'MODERN',desc:'Soft skin, clean colour',filter:'contrast(.95) saturate(.90) sepia(.06)'},
- {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight stock',filter:'contrast(.95) saturate(.90) sepia(.05) brightness(1.02)'},
- {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Night colour, cyan shadows',filter:'contrast(1.05) saturate(.88) hue-rotate(8deg)'},
- {name:'BLEACH',cat:'CINEMA',desc:'Silver contrast, low colour',filter:'contrast(1.22) saturate(.44) brightness(.98)'}
+ {name:'FUJI CLASSIC',cat:'FUJI',desc:'Muted documentary contrast',filter:'contrast(1.13) saturate(.78) brightness(.97) sepia(.05) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'FUJI SOFT',cat:'FUJI',desc:'Pastel skin, lifted shadows',filter:'contrast(.86) saturate(.76) brightness(1.06) sepia(.06) hue-rotate(2deg)',thumb:'./assets/presets/soft_blossom.svg'},
+ {name:'FUJI STREET',cat:'FUJI',desc:'Dense blacks, bold urban colour',filter:'contrast(1.24) saturate(1.10) brightness(.94) sepia(.03) hue-rotate(-7deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'FUJI WARM',cat:'FUJI',desc:'Amber highlights, warm skin',filter:'contrast(1.03) saturate(1.13) brightness(1.01) sepia(.24) hue-rotate(-7deg)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'FUJI COOL',cat:'FUJI',desc:'Cyan shadows, clean highlights',filter:'contrast(1.12) saturate(.90) brightness(.98) hue-rotate(11deg)',thumb:'./assets/presets/cool_bridge.svg'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Acros-style deep monochrome',filter:'grayscale(1) contrast(1.34) brightness(.94)',thumb:'./assets/presets/mono_portrait.svg'},
+ {name:'PORTRAIT 400',cat:'MODERN',desc:'Cream skin, soft highlight rolloff',filter:'contrast(.91) saturate(.88) brightness(1.04) sepia(.11) hue-rotate(-3deg)',thumb:'./assets/presets/portrait_400.svg'},
+ {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight, soft greens',filter:'contrast(.94) saturate(.82) brightness(1.02) sepia(.07) hue-rotate(4deg)',thumb:'./assets/presets/daylight_250.svg'},
+ {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Teal shadows, warm practicals',filter:'contrast(1.14) saturate(1.03) brightness(.93) hue-rotate(13deg)',thumb:'./assets/presets/tungsten_500.svg'},
+ {name:'BLEACH',cat:'CINEMA',desc:'Silver density, crushed colour',filter:'contrast(1.38) saturate(.34) brightness(.92)',thumb:'./assets/presets/bleach.svg'}
 ];
 
 function snapshotPresetFrame(){
@@ -103,21 +103,15 @@ function applyLook(){
  video.style.filter=buildPreviewFilter();
 }
 function renderPresets(){
- const grid=$('presetGrid'); grid.innerHTML='';
+ const grid=$('presetGrid');grid.innerHTML='';
  looks.filter(l=>currentCategory==='ALL'||l.cat===currentCategory).forEach(l=>{
   const card=document.createElement('article');
   card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
-  card.innerHTML=`<div class="preset-preview"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
-  const preview=card.querySelector('.preset-preview');
-  if(presetFrameData){
-    preview.style.backgroundImage=`url("${presetFrameData}")`;
-    preview.style.filter=l.filter;
-  }else{
-    preview.classList.add('fallback-preview');
-    preview.style.setProperty('--fallback-name', `"${l.name}"`);
-  }
+  card.innerHTML=`<div class="preset-preview"><img src="${l.thumb}" alt="" draggable="false"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
+  const img=card.querySelector('img');
+  img.style.filter=l.filter;
   const choose=()=>{pendingLook=l.name;renderPresets();tick('major')};
   card.onclick=choose;
   card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
@@ -365,5 +359,42 @@ function saveCapture(){
 }
 $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 
-renderPresets();applyLook();syncGrid(true);syncHist(true);
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-launch-1',{updateViaCache:'none'}).catch(()=>{}));
+function updateRangeVisual(input){
+ const min=+input.min||0,max=+input.max||100,val=+input.value;
+ const pct=max===min?0:((val-min)/(max-min))*100;
+ input.style.setProperty('--progress',pct+'%');
+ const wrap=input.closest('.range-ux');
+ if(wrap){
+  wrap.style.setProperty('--progress',pct+'%');
+  const bubble=wrap.querySelector('.range-bubble');
+  if(bubble){
+   const source=input.id==='isoSlider'?Math.round(val):
+                input.id==='wbSlider'?Math.round(val)+'K':
+                input.id==='shutterSlider'?(shutterValues[Math.round(val)]||val):
+                input.id==='focusDistanceSlider'?val.toFixed(2):
+                (val>0?'+':'')+Number(val).toFixed(input.step&&String(input.step).includes('.')?1:0);
+   bubble.textContent=source;
+  }
+ }
+}
+function initRangeUX(){
+ document.querySelectorAll('input[type="range"]').forEach(input=>{
+  if(input.closest('.range-ux'))return;
+  const wrap=document.createElement('div');wrap.className='range-ux';
+  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+  const bubble=document.createElement('span');bubble.className='range-bubble mono';wrap.appendChild(bubble);
+  const start=()=>{wrap.classList.add('dragging');updateRangeVisual(input);tick()};
+  const end=()=>{wrap.classList.remove('dragging')};
+  input.addEventListener('pointerdown',start);
+  input.addEventListener('touchstart',start,{passive:true});
+  input.addEventListener('pointerup',end);
+  input.addEventListener('pointercancel',end);
+  input.addEventListener('touchend',end,{passive:true});
+  input.addEventListener('input',()=>updateRangeVisual(input));
+  input.addEventListener('change',()=>{updateRangeVisual(input);end()});
+  updateRangeVisual(input);
+ });
+}
+
+renderPresets();applyLook();syncGrid(true);syncHist(true);initRangeUX();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-sliders-1',{updateViaCache:'none'}).catch(()=>{}));
