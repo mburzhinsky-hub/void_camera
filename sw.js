@@ -1,9 +1,9 @@
-const CACHE='void-camera-controls-20260925-1';
+const CACHE='void-camera-sound-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-sliders-1',
-  './app.js?v=20260925-void-sliders-1',
+  './styles.css?v=20260925-void-sound-1',
+  './app.js?v=20260925-void-sound-1',
   './manifest.webmanifest',
   './icon.svg',
   './assets/presets/classic_city.svg',
