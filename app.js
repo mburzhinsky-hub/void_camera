@@ -45,28 +45,48 @@ function snapshotPresetFrame(){
  }catch(e){return ''}
 }
 
-function launchSound(){
+let audioCtx=null;
+function getAudio(){
  try{
-  const Ctx=window.AudioContext||window.webkitAudioContext;
-  const ctx=new Ctx();
-  const now=ctx.currentTime;
-
-  const pulse=(freq,start,dur,gain,type='triangle')=>{
-   const o=ctx.createOscillator(),g=ctx.createGain();
-   o.type=type;o.frequency.setValueAtTime(freq,now+start);
-   g.gain.setValueAtTime(.0001,now+start);
-   g.gain.exponentialRampToValueAtTime(gain,now+start+.004);
-   g.gain.exponentialRampToValueAtTime(.0001,now+start+dur);
-   o.connect(g).connect(ctx.destination);
-   o.start(now+start);o.stop(now+start+dur+.01);
-  };
-
-  pulse(1180,0,.034,.045,'square');
-  pulse(540,.028,.060,.035,'triangle');
-  pulse(1720,.082,.028,.022,'square');
-  pulse(270,.092,.110,.028,'sine');
- }catch(e){}
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+ }catch{return null}
 }
+function tone(freq,start,dur,gain=.03,type='triangle',slideTo=null){
+ const ctx=getAudio(); if(!ctx)return;
+ const o=ctx.createOscillator(),g=ctx.createGain(),now=ctx.currentTime;
+ o.type=type;o.frequency.setValueAtTime(freq,now+start);
+ if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,now+start+dur*.9);
+ g.gain.setValueAtTime(.0001,now+start);
+ g.gain.exponentialRampToValueAtTime(gain,now+start+.004);
+ g.gain.exponentialRampToValueAtTime(.0001,now+start+dur);
+ o.connect(g).connect(ctx.destination);o.start(now+start);o.stop(now+start+dur+.01);
+}
+function noiseBurst(start=.0,dur=.02,gain=.018,highpass=1200){
+ const ctx=getAudio(); if(!ctx)return;
+ const n=Math.max(1,Math.floor(ctx.sampleRate*dur));
+ const b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);
+ for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+ const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),now=ctx.currentTime;
+ src.buffer=b;f.type='highpass';f.frequency.value=highpass;g.gain.value=gain;
+ src.connect(f).connect(g).connect(ctx.destination);src.start(now+start);
+}
+const sound={
+ soft(){ tone(1280,0,.018,.012,'square',980); },
+ toggleOn(){ tone(760,0,.028,.026,'triangle',1040);tone(1320,.024,.024,.018,'square');noiseBurst(.0,.015,.008,1800); },
+ toggleOff(){ tone(980,0,.028,.022,'triangle',620);tone(420,.026,.035,.018,'sine'); },
+ detent(){ noiseBurst(0,.012,.012,2200);tone(1180,0,.022,.014,'triangle',920); },
+ majorDetent(){ noiseBurst(0,.016,.018,1500);tone(520,0,.042,.028,'triangle',430);tone(1420,.014,.02,.012,'square'); },
+ preset(){ tone(420,0,.07,.018,'sine',620);tone(760,.035,.07,.02,'triangle',960);tone(1240,.07,.045,.012,'sine'); },
+ cameraFlip(){ tone(420,0,.055,.024,'triangle',720);tone(920,.045,.045,.018,'triangle',520); },
+ focus(){ tone(880,0,.028,.016,'sine');tone(1320,.038,.034,.014,'sine'); },
+ shutter(){ noiseBurst(0,.024,.030,900);tone(180,0,.045,.032,'triangle',120);noiseBurst(.048,.022,.024,700);tone(120,.05,.05,.026,'sine',90); },
+ error(){ tone(220,0,.07,.03,'square',170);tone(150,.055,.06,.022,'sine'); },
+ leverRatchet(step=0){ const base=700+(step%4)*80;noiseBurst(0,.012,.016,1300);tone(base,0,.022,.015,'triangle',base*.78); },
+ leverLatch(){ noiseBurst(0,.03,.032,700);tone(240,0,.11,.04,'triangle',110);tone(1280,.045,.028,.018,'square');tone(92,.08,.15,.03,'sine'); },
+ launch(){ tone(140,0,.16,.025,'sine',82);tone(980,.035,.04,.018,'triangle',1320);tone(1680,.09,.025,.012,'square'); }
+};
 
 function showPage(id){
  pages.forEach(p=>p.classList.toggle('active',p.id===id));
@@ -75,14 +95,14 @@ function showPage(id){
 }
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showPage('cameraPage'));
 
-function audioTick(freq=880,d=.028,g=.026){
- try{
-  const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),gn=c.createGain();
-  o.type='triangle';o.frequency.value=freq;gn.gain.setValueAtTime(g,c.currentTime);
-  gn.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d);o.connect(gn).connect(c.destination);o.start();o.stop(c.currentTime+d);
- }catch{}
+function tick(kind='soft'){
+ if(kind==='major') sound.majorDetent();
+ else if(kind==='preset') sound.preset();
+ else if(kind==='flip') sound.cameraFlip();
+ else if(kind==='focus') sound.focus();
+ else if(kind==='error') sound.error();
+ else sound.detent();
 }
-function tick(kind='soft'){audioTick(kind==='major'?520:kind==='edge'?350:980,kind==='major'?.05:.027,kind==='major'?.045:.022)}
 function showToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1200)}
 
 function getLook(name=activeLook){return looks.find(x=>x.name===name)||looks[0]}
@@ -124,7 +144,7 @@ document.querySelectorAll('#presetTabs button').forEach(b=>b.onclick=()=>{
 });
 $('presetButton').onclick=()=>showPage('presetsPage');
 $('colorCard').onclick=()=>showPage('presetsPage');
-$('applyPresetButton').onclick=()=>{activeLook=pendingLook;applyLook();showPage('cameraPage');showToast(activeLook+' APPLIED')};
+$('applyPresetButton').onclick=()=>{activeLook=pendingLook;applyLook();sound.preset();showPage('cameraPage');showToast(activeLook+' APPLIED')};
 
 async function startCamera(){
  try{
@@ -134,12 +154,51 @@ async function startCamera(){
   gate.classList.add('hidden');inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
  }catch(e){console.error(e);showToast('CAMERA ACCESS NEEDED')}
 }
-$('startCameraButton').onclick=()=>{
- launchSound();
+const lever=$('launchLever'),leverHandle=$('startCameraButton'),leverLabel=$('launchLeverLabel');
+let leverDragging=false,leverStartX=0,leverX=0,lastLeverStep=-1,leverArmed=false;
+function leverMax(){ return Math.max(120,Math.min(210,(lever?.clientWidth||320)-92)); }
+function setLever(x){
+ if(!lever)return;
+ const max=leverMax(); leverX=Math.max(0,Math.min(max,x));
+ const p=leverX/max;
+ lever.style.setProperty('--lever-x',leverX+'px');
+ lever.style.setProperty('--lever-p',(p*100).toFixed(1)+'%');
+ const step=Math.floor(p*9);
+ if(step!==lastLeverStep&&leverDragging){
+   lastLeverStep=step; sound.leverRatchet(step);
+ }
+ if(leverLabel) leverLabel.textContent=p>.78?'RELEASE TO ENGAGE':p>.28?'ARMING SENSOR':'PULL TO ARM';
+ lever.classList.toggle('near-lock',p>.82);
+}
+function resetLever(){
+ leverArmed=false; lever?.classList.remove('locked','near-lock');
+ setLever(0); if(leverLabel)leverLabel.textContent='PULL TO ARM';
+}
+async function engageLever(){
+ if(leverArmed)return;
+ leverArmed=true;leverDragging=false;
+ const max=leverMax();setLever(max);lever?.classList.add('locked');
+ if(leverLabel)leverLabel.textContent='SENSOR ENGAGED';
+ sound.leverLatch();
  gate.classList.add('launching');
- startCamera().finally(()=>setTimeout(()=>gate.classList.remove('launching'),450));
-};
-$('switchCameraButton').onclick=async()=>{facingMode=facingMode==='environment'?'user':'environment';tick('major');await startCamera()};
+ setTimeout(()=>sound.launch(),105);
+ try{await startCamera()}finally{setTimeout(()=>gate.classList.remove('launching'),450)}
+}
+function leverPointX(e){return e.touches?.[0]?.clientX ?? e.clientX ?? 0}
+leverHandle.addEventListener('pointerdown',e=>{
+ leverDragging=true;leverStartX=leverPointX(e)-leverX;lastLeverStep=-1;leverHandle.setPointerCapture?.(e.pointerId);sound.soft();
+});
+leverHandle.addEventListener('pointermove',e=>{
+ if(!leverDragging)return;setLever(leverPointX(e)-leverStartX);
+});
+leverHandle.addEventListener('pointerup',e=>{
+ if(!leverDragging)return;leverDragging=false;
+ const armed=leverX/leverMax()>.78;
+ if(armed) engageLever(); else {sound.toggleOff();resetLever()}
+});
+leverHandle.addEventListener('pointercancel',()=>{leverDragging=false;resetLever()});
+leverHandle.addEventListener('click',e=>e.preventDefault());
+$('switchCameraButton').onclick=async()=>{facingMode=facingMode==='environment'?'user':'environment';sound.cameraFlip();await startCamera()};
 
 function inspectCapabilities(){
  const caps=track?.getCapabilities?.()||{},settings=track?.getSettings?.()||{};
@@ -208,7 +267,7 @@ $('isoSlider').oninput=async e=>{
  previewISO=Math.round(+e.target.value);$('isoValue').textContent=previewISO;$('isoReadout').textContent='ISO '+previewISO;
  const caps=track?.getCapabilities?.()||{};
  if(caps.iso)try{await track.applyConstraints({advanced:[{iso:previewISO}]})}catch{}
- applyLook();tick(previewISO%100===0?'major':'soft');
+ applyLook();previewISO%100===0?sound.majorDetent():sound.detent();
 };
 const shutterValues=['1/4000','1/1000','1/250','1/60','1/15','1/4','1s'];
 const shutterSeconds=[.00025,.001,.004,.0167,.0667,.25,1];
@@ -217,13 +276,13 @@ $('shutterSlider').oninput=async e=>{
  $('shutterValue').textContent=label;$('shutterReadout').textContent=label+' · F1.8';
  const caps=track?.getCapabilities?.()||{};
  if(caps.exposureTime)try{await track.applyConstraints({advanced:[{exposureTime:shutterSeconds[previewShutter]}]})}catch{}
- applyLook();tick(previewShutter===2||previewShutter===3?'major':'soft');
+ applyLook();(previewShutter===2||previewShutter===3)?sound.majorDetent():sound.detent();
 };
 $('wbSlider').oninput=async e=>{
  previewWB=+e.target.value;$('wbValue').textContent=previewWB+'K';
  const caps=track?.getCapabilities?.()||{};
  if(caps.colorTemperature)try{await track.applyConstraints({advanced:[{colorTemperature:previewWB}]})}catch{}
- applyLook();tick(previewWB%1000===0?'major':'soft');
+ applyLook();previewWB%1000===0?sound.majorDetent():sound.detent();
 };
 
 function toggleState(btn,state){$(btn)?.classList.toggle('active',state)}
@@ -237,11 +296,11 @@ $('zebraTool').onclick=()=>{zebraEnabled=!zebraEnabled;toggleState('zebraTool',z
 $('peakingTool').onclick=()=>{peakingEnabled=!peakingEnabled;toggleState('peakingTool',peakingEnabled);tick()};
 $('stabTool').onclick=()=>{stabEnabled=!stabEnabled;toggleState('stabTool',stabEnabled);showToast(stabEnabled?'WEB STABILISATION PREVIEW ON':'STABILISATION OFF');tick()};
 $('rawTool').onclick=$('rawQuick').onclick=()=>{
- rawEnabled=!rawEnabled;toggleState('rawTool',rawEnabled);toggleState('rawQuick',rawEnabled);
+ rawEnabled=!rawEnabled;toggleState('rawTool',rawEnabled);toggleState('rawQuick',rawEnabled);rawEnabled?sound.toggleOn():sound.toggleOff();
  $('qualityReadout').textContent=rawEnabled?'12MP RAW+JPEG':'12MP JPEG';
  showToast(rawEnabled?'ORIGINAL + LOOK JPEG':'PROCESSED JPEG');tick('major')
 };
-$('hdrTool').onclick=$('hdrQuick').onclick=()=>{hdrEnabled=!hdrEnabled;toggleState('hdrTool',hdrEnabled);toggleState('hdrQuick',hdrEnabled);applyLook();showToast(hdrEnabled?'HDR LOOK ON':'HDR OFF');tick()};
+$('hdrTool').onclick=$('hdrQuick').onclick=()=>{hdrEnabled=!hdrEnabled;toggleState('hdrTool',hdrEnabled);toggleState('hdrQuick',hdrEnabled);hdrEnabled?sound.toggleOn():sound.toggleOff();applyLook();showToast(hdrEnabled?'HDR LOOK ON':'HDR OFF');tick()};
 
 $('proButton').onclick=()=>showPage('proPage');
 $('resetPro').onclick=()=>{
@@ -259,7 +318,7 @@ $('ratioTool').onclick=()=>{
  finder.className='finder-frame ratio-'+currentRatio.replace(':','-');$('ratioGlyph').textContent=currentRatio;tick('major')
 };
 
-$('focusCard').onclick=async()=>{
+$('focusCard').onclick=async()=>{sound.focus();
  focusMode=focusMode==='AF'?'MF':'AF';$('focusCardValue').textContent=focusMode;$('focusReadout').textContent=focusMode;
  $('focusManualControl').hidden=focusMode!=='MF';
  const caps=track?.getCapabilities?.()||{};
@@ -329,8 +388,8 @@ function drawCapture(canvas,withLook=true){
  else ctx.drawImage(video,0,0,canvas.width,canvas.height);
 }
 function capture(){
- if(!video.videoWidth)return showToast('CAMERA NOT READY');
- tick('major');
+ if(!video.videoWidth){sound.error();return showToast('CAMERA NOT READY')}
+ sound.shutter();
  const processed=document.createElement('canvas');drawCapture(processed,true);
  const original=document.createElement('canvas');if(rawEnabled)drawCapture(original,false);
  processed.toBlob(blob=>{
@@ -395,7 +454,7 @@ function initRangeUX(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initRangeUX();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-sliders-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-sound-1',{updateViaCache:'none'}).catch(()=>{}));
 
 
 function makeSliderAlive(slider, formatter){
