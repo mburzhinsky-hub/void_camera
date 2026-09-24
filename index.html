@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-void-ref-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-func-1" />
 </head>
 <body>
 <main id="app" class="app">
@@ -61,7 +61,7 @@
         <button data-zoom="3" class="lens-pill">3</button>
       </div>
 
-      <div class="af-mark mono"><i></i><span id="focusReadout">AF</span></div>
+      <div class="af-mark mono"><i></i><span id="focusReadout">AF</span></div><div id="meteringReticle" class="metering-reticle" aria-hidden="true"><i></i></div>
     </section>
 
     <section class="camera-bottom">
@@ -172,7 +172,14 @@
     <div class="bottom-control-grid">
       <button id="focusCard"><small>FOCUS</small><b id="focusCardValue">AF</b><span>⌄</span></button>
       <button id="meteringCard"><small>METERING</small><b>EVALUATIVE</b><span>⌄</span></button>
-      <button id="colorCard"><small>COLOR PROFILE</small><b id="colorCardValue">P400</b><span>⌄</span></button>
+      <button id="colorCard"><small>COLOR PROFILE</small><b id="colorCardValue">FUJI CLASSIC</b><span>⌄</span></button>
+    </div>
+
+    <div id="focusManualControl" class="focus-manual-control" hidden>
+      <div class="focus-manual-head"><span class="mono">MANUAL FOCUS</span><b id="focusDistanceValue" class="mono">0.50</b></div>
+      <input id="focusDistanceSlider" class="pro-range" type="range" min="0" max="1" step="0.01" value="0.50" />
+      <div class="range-labels mono"><span>NEAR</span><span>∞</span></div>
+      <em id="focusCapability" class="cap-note mono">WEB PREVIEW</em>
     </div>
 
     <div class="home-indicator"></div>
@@ -218,7 +225,7 @@
       <button id="shareButton" class="mono">SHARE</button>
     </header>
     <footer>
-      <div><small>LOOK</small><b id="reviewLook">P400</b></div>
+      <div><small>LOOK</small><b id="reviewLook">FUJI CLASSIC</b></div>
       <button id="saveButton" class="mono">SAVE / OPEN</button>
     </footer>
   </section>
@@ -226,7 +233,7 @@
   <!-- PERMISSION -->
   <section id="permissionGate" class="permission-gate">
     <div class="void-logo mono">V·O·I·D</div>
-    <div class="build-badge mono">BUILD 0.3 REF</div>
+    <div class="build-badge mono">BUILD 0.4 FUNCTION</div>
     <div class="gate-copy">
       <p class="mono">PRO TOOLS. FILM SOUL.</p>
       <h1>Choose the film.<br>Take the shot.</h1>
@@ -239,6 +246,6 @@
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./app.js?v=20260925-void-ref-1" defer></script>
+<script src="./app.js?v=20260925-void-func-1" defer></script>
 </body>
 </html>
