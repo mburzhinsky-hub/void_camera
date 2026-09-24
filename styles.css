@@ -563,3 +563,67 @@ svg{display:block}
 
 /* retire old circular launch button */
 .launch-button,.launch-button-ring,.launch-aperture,.launch-label{display:none!important}
+
+/* LAUNCH MOTION / BUILD 0.8 */
+.permission-gate{--launch-p:0}
+.permission-gate .launch-orbit{
+  transform:scale(calc(1 + var(--launch-p)*.035)) rotate(calc(var(--launch-p)*8deg));
+  transition:transform .08s linear,filter .08s linear;
+  filter:brightness(calc(1 + var(--launch-p)*.7));
+}
+.permission-gate .axis-x{
+  transform:scaleX(calc(.35 + var(--launch-p)*.65));
+  transform-origin:center;
+}
+.permission-gate .axis-y{
+  transform:scaleY(calc(.35 + var(--launch-p)*.65));
+  transform-origin:center;
+}
+.launch-scan{
+  position:absolute;left:10%;right:10%;top:calc(18% + var(--launch-p)*64%);
+  height:1px;background:linear-gradient(90deg,transparent,#d9d9d6,transparent);
+  opacity:calc(var(--launch-p)*.58);box-shadow:0 0 12px rgba(255,255,255,.18);
+  transition:top .06s linear,opacity .06s linear;
+}
+.launch-flash{
+  position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,.14),transparent 34%);
+  opacity:0;pointer-events:none;
+}
+.permission-gate.lever-active .status-dot{
+  animation:voidPulse .55s infinite alternate ease-in-out;
+}
+.permission-gate.lever-active .launch-build{
+  border-color:#4b4b48;color:#aaa;
+}
+.permission-gate.booting .launch-flash{
+  animation:voidBootFlash .42s ease-out both;
+}
+.permission-gate.booting .launch-orbit{
+  animation:voidBootRing .42s ease-out both;
+}
+.permission-gate.booting .launch-frame .corner{
+  border-color:#8b8b86;
+}
+@keyframes voidPulse{
+  from{opacity:.38;box-shadow:0 0 4px rgba(255,255,255,.12)}
+  to{opacity:1;box-shadow:0 0 14px rgba(255,255,255,.5)}
+}
+@keyframes voidBootFlash{
+  0%{opacity:0}
+  20%{opacity:.95}
+  45%{opacity:.28}
+  100%{opacity:0}
+}
+@keyframes voidBootRing{
+  0%{transform:scale(1.03) rotate(8deg);filter:brightness(1.2)}
+  40%{transform:scale(1.10) rotate(13deg);filter:brightness(2)}
+  100%{transform:scale(1.18) rotate(16deg);filter:brightness(.7);opacity:.18}
+}
+
+/* reduce perceived slider sensitivity */
+.pro-range{
+  touch-action:pan-y;
+}
+.control-card.dragging,.focus-manual-control.dragging{
+  border-color:#454542;
+}
