@@ -1,11 +1,21 @@
-const CACHE='void-camera-launch-20260925-1';
+const CACHE='void-camera-sliders-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-launch-1',
-  './app.js?v=20260925-void-launch-1',
+  './styles.css?v=20260925-void-sliders-1',
+  './app.js?v=20260925-void-sliders-1',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  './assets/presets/classic_city.svg',
+  './assets/presets/soft_blossom.svg',
+  './assets/presets/street_urban.svg',
+  './assets/presets/warm_interior.svg',
+  './assets/presets/cool_bridge.svg',
+  './assets/presets/mono_portrait.svg',
+  './assets/presets/portrait_400.svg',
+  './assets/presets/daylight_250.svg',
+  './assets/presets/tungsten_500.svg',
+  './assets/presets/bleach.svg'
 ];
 
 self.addEventListener('install',event=>{
