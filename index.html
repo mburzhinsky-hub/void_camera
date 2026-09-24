@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VOID" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>VOID Camera</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app" class="app">
+    <section class="viewfinder" aria-label="Camera viewfinder">
+      <video id="cameraVideo" playsinline muted autoplay></video>
+      <canvas id="glCanvas"></canvas>
+
+      <div id="gridOverlay" class="grid-overlay" aria-hidden="true">
+        <span class="v one"></span><span class="v two"></span>
+        <span class="h one"></span><span class="h two"></span>
+      </div>
+
+      <header class="topbar glass">
+        <div class="status-cluster">
+          <span id="clock" class="mono small">--:--</span>
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span class="brand mono">VOID</span>
+        </div>
+        <div class="top-actions">
+          <button id="gridButton" class="icon-button active" aria-label="Toggle grid" title="Grid">
+            <span class="grid-icon" aria-hidden="true"></span>
+          </button>
+          <button id="proButton" class="icon-button" aria-label="Open pro controls" title="Pro controls">
+            <span class="sliders-icon" aria-hidden="true"></span>
+          </button>
+          <button id="switchCameraButton" class="icon-button" aria-label="Switch camera" title="Switch camera">
+            <span class="switch-icon" aria-hidden="true">↻</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="left-readout glass subtle">
+        <div><span class="label">LOOK</span><strong id="activeLookReadout">VOID 400</strong></div>
+        <div><span class="label">ISO</span><strong id="isoReadout">AUTO</strong></div>
+        <div><span class="label">ZOOM</span><strong id="zoomReadout">1.0×</strong></div>
+      </div>
+
+      <div id="cameraStateBadge" class="camera-state mono">READY</div>
+
+      <section class="bottom-deck">
+        <div class="mode-strip mono" aria-label="Camera mode">
+          <button class="mode">VIDEO</button>
+          <button class="mode active">PHOTO</button>
+          <button class="mode">PORTRAIT</button>
+        </div>
+
+        <div id="presetRail" class="preset-rail" aria-label="Film looks"></div>
+
+        <div class="capture-row">
+          <button id="lastShotButton" class="thumbnail-button" aria-label="Last photo">
+            <span id="lastShotThumb" class="thumbnail-placeholder mono">00</span>
+          </button>
+          <button id="shutterButton" class="shutter" aria-label="Take photo">
+            <span class="shutter-core"></span>
+          </button>
+          <button id="lookButton" class="round-action" aria-label="Open look controls">
+            <span class="mono">FX</span>
+          </button>
+        </div>
+
+        <div class="home-indicator" aria-hidden="true"></div>
+      </section>
+    </section>
+
+    <section id="proPanel" class="sheet" aria-hidden="true">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <span class="eyebrow mono">MANUAL / LIVE</span>
+          <h2 class="dot-title">PRO CONTROL</h2>
+        </div>
+        <button id="closeProButton" class="icon-button" aria-label="Close pro controls">×</button>
+      </div>
+
+      <div class="control-card">
+        <div class="control-title">
+          <div><span class="label">ZOOM</span><strong id="zoomValue">1.0×</strong></div>
+          <span id="zoomMode" class="capability mono">DIGITAL</span>
+        </div>
+        <input id="zoomSlider" class="void-slider" type="range" min="1" max="4" step="0.05" value="1" />
+        <div class="tick-row mono"><span>1×</span><span>2×</span><span>3×</span><span>4×</span></div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-title">
+          <div><span class="label">LOOK CHARACTER</span><strong id="lookValue">100%</strong></div>
+          <span class="capability mono">LIVE</span>
+        </div>
+        <input id="lookSlider" class="void-slider" type="range" min="0" max="100" step="1" value="100" />
+      </div>
+
+      <div class="control-card">
+        <div class="control-title">
+          <div><span class="label">ISO</span><strong id="isoValue">AUTO</strong></div>
+          <span id="isoCapability" class="capability mono muted">CHECKING</span>
+        </div>
+        <input id="isoSlider" class="void-slider" type="range" min="50" max="1600" step="10" value="100" disabled />
+        <p id="isoHelp" class="help">Sensor ISO appears only when the browser exposes a real camera ISO control.</p>
+      </div>
+
+      <div class="toggle-grid">
+        <button id="zebraButton" class="toggle-card">
+          <span class="toggle-glyph zebra-glyph"></span>
+          <span><strong>ZEBRA</strong><small>Highlight warning</small></span>
+          <i class="toggle-led"></i>
+        </button>
+        <button id="gridPanelButton" class="toggle-card active">
+          <span class="toggle-glyph grid-glyph"></span>
+          <span><strong>GRID</strong><small>Rule of thirds</small></span>
+          <i class="toggle-led"></i>
+        </button>
+      </div>
+
+      <div class="support-note">
+        <span class="mono">CAPABILITY AWARE</span>
+        <p>VOID never pretends a web control is a real sensor control. Unsupported manual functions stay clearly marked until the native build.</p>
+      </div>
+    </section>
+
+    <section id="lookPanel" class="sheet compact" aria-hidden="true">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <span class="eyebrow mono">FILM ENGINE</span>
+          <h2 class="dot-title">LOOK DETAILS</h2>
+        </div>
+        <button id="closeLookButton" class="icon-button" aria-label="Close look controls">×</button>
+      </div>
+      <div id="lookDetail" class="look-detail"></div>
+    </section>
+
+    <section id="reviewPanel" class="review" aria-hidden="true">
+      <img id="reviewImage" alt="Captured VOID photo" />
+      <div class="review-top glass">
+        <button id="reviewCloseButton" class="icon-button" aria-label="Close photo review">×</button>
+        <span class="mono">VOID / CAPTURE</span>
+        <button id="shareButton" class="text-button mono">SHARE</button>
+      </div>
+      <div class="review-bottom glass">
+        <div>
+          <span class="label">LOOK</span>
+          <strong id="reviewLook">VOID 400</strong>
+        </div>
+        <button id="saveButton" class="save-button mono">SAVE / OPEN</button>
+      </div>
+    </section>
+
+    <section id="permissionGate" class="gate">
+      <div class="gate-mark" aria-hidden="true">
+        <span>V</span><span>O</span><span>I</span><span>D</span>
+      </div>
+      <p class="eyebrow mono">CAMERA / FILM / CONTROL</p>
+      <h1>Choose the look.<br/>Then take the shot.</h1>
+      <p class="gate-copy">Live film looks before capture. Built for a phone, not a desktop.</p>
+      <button id="startCameraButton" class="primary-button mono">OPEN CAMERA</button>
+      <p class="permission-note">Camera access stays in your browser. The prototype does not upload your photos.</p>
+    </section>
+
+    <div id="toast" class="toast mono" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
