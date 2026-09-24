@@ -262,8 +262,18 @@ function setEV(v){
  else video.style.opacity=Math.max(.62,Math.min(1,1+currentEV*.07));
  sliderSound($('proEvSlider'),currentEV);
 }
-$('evSlider').oninput=e=>{setEV(e.target.value);$('proEvSlider').value=e.target.value};
-$('proEvSlider').oninput=e=>{setEV(e.target.value);$('evSlider').value=Math.max(-2,Math.min(2,e.target.value))};
+$('evSlider').oninput=e=>{
+ setEV(e.target.value);
+ $('proEvSlider').value=e.target.value;
+ syncCustomSlider($('proEvSlider'));
+ syncMainEV();
+};
+$('proEvSlider').oninput=e=>{
+ setEV(e.target.value);
+ $('evSlider').value=Math.max(-2,Math.min(2,e.target.value));
+ syncCustomSlider($('proEvSlider'));
+ syncMainEV();
+};
 
 $('isoSlider').oninput=async e=>{
  previewISO=Math.round(+e.target.value);$('isoValue').textContent=previewISO;$('isoReadout').textContent='ISO '+previewISO;
@@ -312,12 +322,12 @@ $('resetPro').onclick=()=>{
  $('isoSlider').value=100;$('isoValue').textContent='100';
  $('shutterSlider').value=3;$('shutterValue').textContent='1/60';
  $('wbSlider').value=5200;$('wbValue').textContent='5200K';
- $('evSlider').value=0;$('proEvSlider').value=0;setEV(0);applyLook();showToast('PRO RESET');
+ $('evSlider').value=0;$('proEvSlider').value=0;setEV(0);applyLook();syncAllCustomControls();showToast('PRO RESET');
 };
 
 $('ratioTool').onclick=()=>{
  currentRatio=currentRatio==='4:3'?'3:2':currentRatio==='3:2'?'16:9':'4:3';
- finder.className='finder-frame ratio-'+currentRatio.replace(':','-');$('ratioGlyph').textContent=currentRatio;tick('major')
+ finder.dataset.ratio=currentRatio;$('ratioGlyph').textContent=currentRatio;tick('major')
 };
 
 $('focusCard').onclick=async()=>{sound.focus();
@@ -418,18 +428,14 @@ function saveCapture(){
 }
 $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 
-function updateRangeVisual(input){
- const min=+input.min||0,max=+input.max||100,val=+input.value;
- const pct=max===min?0:((val-min)/(max-min))*100;
- input.style.setProperty('--p',pct+'%');
- const card=input.closest('.control-card,.focus-manual-control');
- if(card){
-   const bubble=card.querySelector('.slider-bubble');
-   if(bubble){
-     bubble.style.setProperty('--x',pct+'%');
-     bubble.textContent=formatSliderValue(input,val);
-   }
- }
+const customSliderMap=new WeakMap();
+
+function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
+function snapValue(input,raw){
+ const min=Number(input.min)||0,max=Number(input.max)||100,step=Number(input.step)||1;
+ const snapped=Math.round((raw-min)/step)*step+min;
+ const decimals=(String(step).split('.')[1]||'').length;
+ return Number(clamp(snapped,min,max).toFixed(decimals));
 }
 function formatSliderValue(input,val){
  if(input.id==='isoSlider') return 'ISO '+Math.round(val);
@@ -439,64 +445,132 @@ function formatSliderValue(input,val){
  if(input.id==='proEvSlider') return (val>0?'+':'')+Number(val).toFixed(1);
  return String(val);
 }
+function syncCustomSlider(input){
+ const ui=customSliderMap.get(input); if(!ui)return;
+ const min=Number(input.min)||0,max=Number(input.max)||100,val=Number(input.value);
+ const p=max===min?0:clamp((val-min)/(max-min),0,1);
+ ui.root.style.setProperty('--p',(p*100).toFixed(3)+'%');
+ ui.bubble.textContent=formatSliderValue(input,val);
+ ui.root.setAttribute('aria-valuenow',String(val));
+}
+function setInputFromPointer(input,ui,clientX,commit=false){
+ const r=ui.track.getBoundingClientRect();
+ const p=clamp((clientX-r.left)/Math.max(1,r.width),0,1);
+ const min=Number(input.min)||0,max=Number(input.max)||100;
+ const val=snapValue(input,min+p*(max-min));
+ if(Number(input.value)!==val){
+   input.value=String(val);
+   input.dispatchEvent(new Event('input',{bubbles:true}));
+ }
+ syncCustomSlider(input);
+ if(commit) input.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function buildCustomSlider(input){
+ if(customSliderMap.has(input))return;
+ input.classList.add('native-range-hidden');
 
-const detentState=new Map();
-function shouldSoundDetent(input,val){
- const now=performance.now();
- const id=input.id;
- let key='';
- if(id==='isoSlider') key='iso:'+Math.round(val/100)*100;
- else if(id==='wbSlider') key='wb:'+Math.round(val/500)*500;
- else if(id==='proEvSlider') key='ev:'+Math.round(val*2)/2;
- else if(id==='focusDistanceSlider') key='focus:'+Math.round(val*10)/10;
- else if(id==='shutterSlider') key='shutter:'+Math.round(val);
- else key='generic:'+Math.round(val);
- const last=detentState.get(id)||{key:null,t:0};
- if(last.key===key || now-last.t<55) return false;
- detentState.set(id,{key,t:now});
- return true;
-}
-function sliderSound(input,val){
- if(!shouldSoundDetent(input,val)) return;
- if(input.id==='shutterSlider') return sound.majorDetent();
- if(input.id==='isoSlider'){
-   const major=[100,200,400,800,1600].includes(Math.round(val));
-   return major?sound.majorDetent():sound.detent();
- }
- if(input.id==='wbSlider'){
-   const major=Math.round(val)%1000===0;
-   return major?sound.majorDetent():sound.detent();
- }
- if(input.id==='proEvSlider'){
-   const major=Math.abs((val*2)-Math.round(val*2))<.001;
-   return major?sound.majorDetent():sound.detent();
- }
- sound.detent();
-}
-function initSliderUX(){
- document.querySelectorAll('.pro-range').forEach(input=>{
-   const card=input.closest('.control-card,.focus-manual-control');
-   if(!card)return;
-   let bubble=card.querySelector('.slider-bubble');
-   if(!bubble){
-     bubble=document.createElement('div');
-     bubble.className='slider-bubble mono';
-     card.appendChild(bubble);
-   }
-   const start=()=>{card.classList.add('dragging');getAudio();updateRangeVisual(input)};
-   const end=()=>card.classList.remove('dragging');
-   input.addEventListener('pointerdown',start);
-   input.addEventListener('pointerup',end);
-   input.addEventListener('pointercancel',end);
-   input.addEventListener('input',()=>updateRangeVisual(input));
-   input.addEventListener('change',()=>{updateRangeVisual(input);end()});
-   updateRangeVisual(input);
+ const root=document.createElement('div');
+ root.className='void-range'+(input.classList.contains('temp-range')?' temperature':'');
+ root.tabIndex=0;
+ root.setAttribute('role','slider');
+ root.setAttribute('aria-label',input.id);
+ const track=document.createElement('div');
+ track.className='void-range-track';
+ track.innerHTML='<span class="void-range-fill"></span><span class="void-range-rail"></span><span class="void-range-thumb"></span>';
+ const bubble=document.createElement('span');
+ bubble.className='void-range-bubble mono';
+ root.append(track,bubble);
+ input.insertAdjacentElement('afterend',root);
+
+ const ui={root,track,bubble};customSliderMap.set(input,ui);
+ let dragging=false,pointerId=null;
+
+ const startDrag=e=>{
+   dragging=true;pointerId=e.pointerId;
+   root.classList.add('dragging');
+   root.setPointerCapture?.(pointerId);
+   getAudio();
+   setInputFromPointer(input,ui,e.clientX);
+ };
+ const move=e=>{if(dragging)setInputFromPointer(input,ui,e.clientX)};
+ const endDrag=e=>{
+   if(!dragging)return;
+   dragging=false;root.classList.remove('dragging');
+   setInputFromPointer(input,ui,e.clientX??track.getBoundingClientRect().left,false);
+   input.dispatchEvent(new Event('change',{bubbles:true}));
+   if(pointerId!==null)root.releasePointerCapture?.(pointerId);
+   pointerId=null;
+ };
+ root.addEventListener('pointerdown',startDrag);
+ root.addEventListener('pointermove',move);
+ root.addEventListener('pointerup',endDrag);
+ root.addEventListener('pointercancel',()=>{dragging=false;root.classList.remove('dragging')});
+ root.addEventListener('keydown',e=>{
+   if(!['ArrowLeft','ArrowRight'].includes(e.key))return;
+   e.preventDefault();
+   const step=Number(input.step)||1;
+   input.value=String(snapValue(input,Number(input.value)+(e.key==='ArrowRight'?step:-step)));
+   input.dispatchEvent(new Event('input',{bubbles:true}));
+   input.dispatchEvent(new Event('change',{bubbles:true}));
+   syncCustomSlider(input);
  });
+ input.addEventListener('input',()=>syncCustomSlider(input));
+ syncCustomSlider(input);
 }
 
-renderPresets();applyLook();syncGrid(true);syncHist(true);initSliderUX();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-audiofix-1',{updateViaCache:'none'}).catch(()=>{}));
+let mainEVUI=null;
+function syncMainEV(){
+ if(!mainEVUI)return;
+ const input=$('evSlider'),min=Number(input.min),max=Number(input.max),val=Number(input.value);
+ const p=clamp((val-min)/(max-min),0,1);
+ mainEVUI.root.style.setProperty('--p',(p*100).toFixed(3)+'%');
+ mainEVUI.value.textContent=(val>0?'+':'')+val.toFixed(1);
+ mainEVUI.root.setAttribute('aria-valuenow',String(val));
+}
+function buildMainEV(){
+ const input=$('evSlider');if(!input||mainEVUI)return;
+ input.classList.add('native-range-hidden');
+ const root=document.createElement('div');
+ root.className='ev-scrubber';
+ root.tabIndex=0;root.setAttribute('role','slider');root.setAttribute('aria-label','Exposure compensation');
+ root.innerHTML='<div class="ev-scrubber-labels mono"><span>-2</span><span>-1</span><b class="ev-live-value">0.0</b><span>+1</span><span>+2</span></div><div class="ev-scrubber-track"><span class="ev-minor-ticks"></span><span class="ev-center-line"></span><span class="ev-marker"></span></div>';
+ input.insertAdjacentElement('afterend',root);
+ const track=root.querySelector('.ev-scrubber-track'),value=root.querySelector('.ev-live-value');
+ mainEVUI={root,track,value};
+ let dragging=false,id=null;
+ const set=e=>{
+   const r=track.getBoundingClientRect(),p=clamp((e.clientX-r.left)/Math.max(1,r.width),0,1);
+   const val=snapValue(input,Number(input.min)+p*(Number(input.max)-Number(input.min)));
+   if(Number(input.value)!==val){
+     input.value=String(val);input.dispatchEvent(new Event('input',{bubbles:true}));
+   }
+   syncMainEV();
+ };
+ root.addEventListener('pointerdown',e=>{dragging=true;id=e.pointerId;root.setPointerCapture?.(id);root.classList.add('dragging');getAudio();set(e)});
+ root.addEventListener('pointermove',e=>{if(dragging)set(e)});
+ root.addEventListener('pointerup',e=>{if(!dragging)return;set(e);dragging=false;root.classList.remove('dragging');input.dispatchEvent(new Event('change',{bubbles:true}));root.releasePointerCapture?.(id);id=null});
+ root.addEventListener('pointercancel',()=>{dragging=false;root.classList.remove('dragging')});
+ root.addEventListener('keydown',e=>{
+   if(!['ArrowLeft','ArrowRight'].includes(e.key))return;
+   e.preventDefault();const step=Number(input.step)||.1;
+   input.value=String(snapValue(input,Number(input.value)+(e.key==='ArrowRight'?step:-step)));
+   input.dispatchEvent(new Event('input',{bubbles:true}));syncMainEV();
+ });
+ input.addEventListener('input',syncMainEV);
+ syncMainEV();
+}
 
+function syncAllCustomControls(){
+ document.querySelectorAll('.pro-range').forEach(syncCustomSlider);
+ syncMainEV();
+}
+function initCustomControls(){
+ document.querySelectorAll('.pro-range').forEach(buildCustomSlider);
+ buildMainEV();
+}
+
+renderPresets();applyLook();syncGrid(true);syncHist(true);initCustomControls();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-layoutfix-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
