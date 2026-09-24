@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-void-sound-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-audiofix-1" />
 </head>
 <body>
 <main id="app" class="app">
@@ -130,7 +130,7 @@
           <div><b class="mono">ISO</b><small>Light Sensitivity</small></div>
           <strong id="isoValue" class="value-pill mono">AUTO</strong>
         </div>
-        <input id="isoSlider" class="pro-range" type="range" min="50" max="1600" step="10" value="100" />
+        <input id="isoSlider" class="pro-range" type="range" min="50" max="1600" step="50" value="100" />
         <div class="range-labels mono"><span>50</span><span>100</span><span>200</span><span>400</span><span>800</span><span>1600</span></div>
         <em id="isoCapability" class="cap-note mono">CHECKING SENSOR</em>
       </article>
@@ -152,7 +152,7 @@
           <div><b class="mono">WHITE BALANCE</b><small>Colour Temperature</small></div>
           <strong id="wbValue" class="value-pill mono">AUTO</strong>
         </div>
-        <input id="wbSlider" class="pro-range temp-range" type="range" min="2500" max="9000" step="100" value="5200" />
+        <input id="wbSlider" class="pro-range temp-range" type="range" min="2500" max="9000" step="250" value="5250" />
         <div class="range-labels mono"><span>2500K</span><span>4000K</span><span>5200K</span><span>7000K</span><span>9000K</span></div>
         <em id="wbCapability" class="cap-note mono">BROWSER CAPABILITY</em>
       </article>
@@ -163,7 +163,7 @@
           <div><b class="mono">EXPOSURE COMPENSATION</b><small>Brighter or Darker</small></div>
           <strong id="proEvValue" class="value-pill mono">0.0</strong>
         </div>
-        <input id="proEvSlider" class="pro-range" type="range" min="-3" max="3" step=".1" value="0" />
+        <input id="proEvSlider" class="pro-range" type="range" min="-3" max="3" step=".2" value="0" />
         <div class="range-labels mono"><span>-3</span><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span></div>
         <em id="evCapability" class="cap-note mono">DIGITAL FALLBACK</em>
       </article>
@@ -177,7 +177,7 @@
 
     <div id="focusManualControl" class="focus-manual-control" hidden>
       <div class="focus-manual-head"><span class="mono">MANUAL FOCUS</span><b id="focusDistanceValue" class="mono">0.50</b></div>
-      <input id="focusDistanceSlider" class="pro-range" type="range" min="0" max="1" step="0.01" value="0.50" />
+      <input id="focusDistanceSlider" class="pro-range" type="range" min="0" max="1" step="0.05" value="0.50" />
       <div class="range-labels mono"><span>NEAR</span><span>∞</span></div>
       <em id="focusCapability" class="cap-note mono">WEB PREVIEW</em>
     </div>
@@ -234,7 +234,7 @@
   <section id="permissionGate" class="permission-gate">
     <div class="launch-frame" aria-hidden="true">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-      <span class="axis axis-x"></span><span class="axis axis-y"></span>
+      <span class="axis axis-x"></span><span class="axis axis-y"></span><span class="launch-scan"></span><span class="launch-flash"></span>
     </div>
 
     <header class="launch-header">
@@ -242,7 +242,7 @@
         <div class="launch-brand dot-title">VOID</div>
         <p class="mono">CAMERA SYSTEM / 01</p>
       </div>
-      <div class="launch-build mono">BUILD 0.7</div>
+      <div class="launch-build mono">BUILD 0.8</div>
     </header>
 
     <div class="launch-center">
@@ -285,6 +285,6 @@
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./app.js?v=20260925-void-sound-1" defer></script>
+<script src="./app.js?v=20260925-void-audiofix-1" defer></script>
 </body>
 </html>
