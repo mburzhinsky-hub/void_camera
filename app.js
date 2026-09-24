@@ -11,24 +11,66 @@ let capturedBlob=null, originalBlob=null, lastObjectUrl=null, lastTickStep=null;
 let rawEnabled=false,hdrEnabled=false,gridEnabled=true,histEnabled=true,zebraEnabled=false,peakingEnabled=false,stabEnabled=false;
 let currentRatio='4:3', currentZoom=1, currentEV=0, analysisRAF=0;
 let previewISO=100, previewShutter=3, previewWB=5200, focusMode='AF', meteringMode='EVALUATIVE';
+let presetFrameData='';
 const favorites=new Set();
 
 const looks=[
- {name:'FUJI CLASSIC',cat:'FUJI',desc:'Rich tones, true to life',filter:'contrast(.97) saturate(.92) sepia(.09) hue-rotate(-4deg)',thumb:'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=700&q=80'},
- {name:'FUJI SOFT',cat:'FUJI',desc:'Muted contrast, gentle film',filter:'contrast(.90) saturate(.82) brightness(1.03)',thumb:'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=700&q=80'},
- {name:'FUJI STREET',cat:'FUJI',desc:'Bold colours, urban soul',filter:'contrast(1.10) saturate(.94) hue-rotate(-7deg)',thumb:'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=700&q=80'},
- {name:'FUJI WARM',cat:'FUJI',desc:'Golden skin, nostalgic feel',filter:'contrast(.98) saturate(1.02) sepia(.18) hue-rotate(-5deg)',thumb:'https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=700&q=80'},
- {name:'FUJI COOL',cat:'FUJI',desc:'Crisp tones, modern look',filter:'contrast(1.03) saturate(.88) hue-rotate(8deg)',thumb:'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80'},
- {name:'FUJI MONO',cat:'B&W',desc:'Timeless black and white',filter:'grayscale(1) contrast(1.14)',thumb:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=700&q=80'},
- {name:'PORTRAIT 400',cat:'MODERN',desc:'Soft skin, clean colour',filter:'contrast(.95) saturate(.90) sepia(.06)',thumb:'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=700&q=80'},
- {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight stock',filter:'contrast(.95) saturate(.90) sepia(.05) brightness(1.02)',thumb:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=700&q=80'},
- {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Night colour, cyan shadows',filter:'contrast(1.05) saturate(.88) hue-rotate(8deg)',thumb:'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=700&q=80'},
- {name:'BLEACH',cat:'CINEMA',desc:'Silver contrast, low colour',filter:'contrast(1.22) saturate(.44) brightness(.98)',thumb:'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=700&q=80'}
+ {name:'FUJI CLASSIC',cat:'FUJI',desc:'Rich tones, true to life',filter:'contrast(.97) saturate(.92) sepia(.09) hue-rotate(-4deg)'},
+ {name:'FUJI SOFT',cat:'FUJI',desc:'Muted contrast, gentle film',filter:'contrast(.90) saturate(.82) brightness(1.03)'},
+ {name:'FUJI STREET',cat:'FUJI',desc:'Bold colours, urban soul',filter:'contrast(1.10) saturate(.94) hue-rotate(-7deg)'},
+ {name:'FUJI WARM',cat:'FUJI',desc:'Golden skin, nostalgic feel',filter:'contrast(.98) saturate(1.02) sepia(.18) hue-rotate(-5deg)'},
+ {name:'FUJI COOL',cat:'FUJI',desc:'Crisp tones, modern look',filter:'contrast(1.03) saturate(.88) hue-rotate(8deg)'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Timeless black and white',filter:'grayscale(1) contrast(1.14)'},
+ {name:'PORTRAIT 400',cat:'MODERN',desc:'Soft skin, clean colour',filter:'contrast(.95) saturate(.90) sepia(.06)'},
+ {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight stock',filter:'contrast(.95) saturate(.90) sepia(.05) brightness(1.02)'},
+ {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Night colour, cyan shadows',filter:'contrast(1.05) saturate(.88) hue-rotate(8deg)'},
+ {name:'BLEACH',cat:'CINEMA',desc:'Silver contrast, low colour',filter:'contrast(1.22) saturate(.44) brightness(.98)'}
 ];
+
+function snapshotPresetFrame(){
+ if(!video.videoWidth||!video.videoHeight)return '';
+ try{
+  const c=document.createElement('canvas');
+  const targetW=420,targetH=250;
+  c.width=targetW;c.height=targetH;
+  const ctx=c.getContext('2d');
+  const srcAspect=video.videoWidth/video.videoHeight;
+  const dstAspect=targetW/targetH;
+  let sx=0,sy=0,sw=video.videoWidth,sh=video.videoHeight;
+  if(srcAspect>dstAspect){sw=video.videoHeight*dstAspect;sx=(video.videoWidth-sw)/2}
+  else{sh=video.videoWidth/dstAspect;sy=(video.videoHeight-sh)/2}
+  ctx.drawImage(video,sx,sy,sw,sh,0,0,targetW,targetH);
+  presetFrameData=c.toDataURL('image/jpeg',.78);
+  return presetFrameData;
+ }catch(e){return ''}
+}
+
+function launchSound(){
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  const ctx=new Ctx();
+  const now=ctx.currentTime;
+
+  const pulse=(freq,start,dur,gain,type='triangle')=>{
+   const o=ctx.createOscillator(),g=ctx.createGain();
+   o.type=type;o.frequency.setValueAtTime(freq,now+start);
+   g.gain.setValueAtTime(.0001,now+start);
+   g.gain.exponentialRampToValueAtTime(gain,now+start+.004);
+   g.gain.exponentialRampToValueAtTime(.0001,now+start+dur);
+   o.connect(g).connect(ctx.destination);
+   o.start(now+start);o.stop(now+start+dur+.01);
+  };
+
+  pulse(1180,0,.034,.045,'square');
+  pulse(540,.028,.060,.035,'triangle');
+  pulse(1720,.082,.028,.022,'square');
+  pulse(270,.092,.110,.028,'sine');
+ }catch(e){}
+}
 
 function showPage(id){
  pages.forEach(p=>p.classList.toggle('active',p.id===id));
- if(id==='presetsPage'){ pendingLook=activeLook; renderPresets(); }
+ if(id==='presetsPage'){ pendingLook=activeLook; snapshotPresetFrame(); renderPresets(); }
  tick('soft');
 }
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showPage('cameraPage'));
@@ -67,7 +109,15 @@ function renderPresets(){
   card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
-  card.innerHTML=`<div class="preset-preview" style="--image:url('${l.thumb}');filter:${l.filter}"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
+  card.innerHTML=`<div class="preset-preview"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
+  const preview=card.querySelector('.preset-preview');
+  if(presetFrameData){
+    preview.style.backgroundImage=`url("${presetFrameData}")`;
+    preview.style.filter=l.filter;
+  }else{
+    preview.classList.add('fallback-preview');
+    preview.style.setProperty('--fallback-name', `"${l.name}"`);
+  }
   const choose=()=>{pendingLook=l.name;renderPresets();tick('major')};
   card.onclick=choose;
   card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
@@ -92,7 +142,11 @@ async function startCamera(){
   gate.classList.add('hidden');inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
  }catch(e){console.error(e);showToast('CAMERA ACCESS NEEDED')}
 }
-$('startCameraButton').onclick=startCamera;
+$('startCameraButton').onclick=()=>{
+ launchSound();
+ gate.classList.add('launching');
+ startCamera().finally(()=>setTimeout(()=>gate.classList.remove('launching'),450));
+};
 $('switchCameraButton').onclick=async()=>{facingMode=facingMode==='environment'?'user':'environment';tick('major');await startCamera()};
 
 function inspectCapabilities(){
@@ -312,4 +366,4 @@ function saveCapture(){
 $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-func-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-launch-1',{updateViaCache:'none'}).catch(()=>{}));
