@@ -162,7 +162,7 @@ function setLever(x){
  const max=leverMax(); leverX=Math.max(0,Math.min(max,x));
  const p=leverX/max;
  lever.style.setProperty('--lever-x',leverX+'px');
- lever.style.setProperty('--lever-p',(p*100).toFixed(1)+'%');
+ lever.style.setProperty('--lever-p',(p*100).toFixed(1)+'%');gate.style.setProperty('--launch-p',p.toFixed(3));
  const step=Math.floor(p*9);
  if(step!==lastLeverStep&&leverDragging){
    lastLeverStep=step; sound.leverRatchet(step);
@@ -180,23 +180,25 @@ async function engageLever(){
  const max=leverMax();setLever(max);lever?.classList.add('locked');
  if(leverLabel)leverLabel.textContent='SENSOR ENGAGED';
  sound.leverLatch();
- gate.classList.add('launching');
+ gate.classList.add('launching','booting');
  setTimeout(()=>sound.launch(),105);
- try{await startCamera()}finally{setTimeout(()=>gate.classList.remove('launching'),450)}
+ try{await startCamera()}finally{setTimeout(()=>gate.classList.remove('launching','booting'),520)}
 }
 function leverPointX(e){return e.touches?.[0]?.clientX ?? e.clientX ?? 0}
 leverHandle.addEventListener('pointerdown',e=>{
- leverDragging=true;leverStartX=leverPointX(e)-leverX;lastLeverStep=-1;leverHandle.setPointerCapture?.(e.pointerId);sound.soft();
+ getAudio();
+ leverDragging=true;leverStartX=leverPointX(e)-leverX;lastLeverStep=-1;leverHandle.setPointerCapture?.(e.pointerId);
+ gate.classList.add('lever-active');sound.toggleOn();
 });
 leverHandle.addEventListener('pointermove',e=>{
  if(!leverDragging)return;setLever(leverPointX(e)-leverStartX);
 });
 leverHandle.addEventListener('pointerup',e=>{
- if(!leverDragging)return;leverDragging=false;
+ if(!leverDragging)return;leverDragging=false;gate.classList.remove('lever-active');
  const armed=leverX/leverMax()>.78;
  if(armed) engageLever(); else {sound.toggleOff();resetLever()}
 });
-leverHandle.addEventListener('pointercancel',()=>{leverDragging=false;resetLever()});
+leverHandle.addEventListener('pointercancel',()=>{leverDragging=false;gate.classList.remove('lever-active');resetLever()});
 leverHandle.addEventListener('click',e=>e.preventDefault());
 $('switchCameraButton').onclick=async()=>{facingMode=facingMode==='environment'?'user':'environment';sound.cameraFlip();await startCamera()};
 
@@ -258,7 +260,7 @@ function setEV(v){
  const caps=track?.getCapabilities?.()||{};
  if(caps.exposureCompensation)track.applyConstraints({advanced:[{exposureCompensation:currentEV}]}).catch(()=>{});
  else video.style.opacity=Math.max(.62,Math.min(1,1+currentEV*.07));
- tick();
+ sliderSound($('proEvSlider'),currentEV);
 }
 $('evSlider').oninput=e=>{setEV(e.target.value);$('proEvSlider').value=e.target.value};
 $('proEvSlider').oninput=e=>{setEV(e.target.value);$('evSlider').value=Math.max(-2,Math.min(2,e.target.value))};
@@ -267,7 +269,7 @@ $('isoSlider').oninput=async e=>{
  previewISO=Math.round(+e.target.value);$('isoValue').textContent=previewISO;$('isoReadout').textContent='ISO '+previewISO;
  const caps=track?.getCapabilities?.()||{};
  if(caps.iso)try{await track.applyConstraints({advanced:[{iso:previewISO}]})}catch{}
- applyLook();previewISO%100===0?sound.majorDetent():sound.detent();
+ applyLook();sliderSound($('isoSlider'),previewISO);
 };
 const shutterValues=['1/4000','1/1000','1/250','1/60','1/15','1/4','1s'];
 const shutterSeconds=[.00025,.001,.004,.0167,.0667,.25,1];
@@ -276,13 +278,13 @@ $('shutterSlider').oninput=async e=>{
  $('shutterValue').textContent=label;$('shutterReadout').textContent=label+' · F1.8';
  const caps=track?.getCapabilities?.()||{};
  if(caps.exposureTime)try{await track.applyConstraints({advanced:[{exposureTime:shutterSeconds[previewShutter]}]})}catch{}
- applyLook();(previewShutter===2||previewShutter===3)?sound.majorDetent():sound.detent();
+ applyLook();sliderSound($('shutterSlider'),previewShutter);
 };
 $('wbSlider').oninput=async e=>{
  previewWB=+e.target.value;$('wbValue').textContent=previewWB+'K';
  const caps=track?.getCapabilities?.()||{};
  if(caps.colorTemperature)try{await track.applyConstraints({advanced:[{colorTemperature:previewWB}]})}catch{}
- applyLook();previewWB%1000===0?sound.majorDetent():sound.detent();
+ applyLook();sliderSound($('wbSlider'),previewWB);
 };
 
 function toggleState(btn,state){$(btn)?.classList.toggle('active',state)}
@@ -332,7 +334,7 @@ $('focusDistanceSlider').oninput=async e=>{
   const d=caps.focusDistance.min+(caps.focusDistance.max-caps.focusDistance.min)*v;
   try{await track.applyConstraints({advanced:[{focusMode:'manual',focusDistance:d}]})}catch{}
  }
- tick();
+ sliderSound($('focusDistanceSlider'),v);
 };
 
 $('meteringCard').onclick=()=>{
@@ -419,76 +421,82 @@ $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 function updateRangeVisual(input){
  const min=+input.min||0,max=+input.max||100,val=+input.value;
  const pct=max===min?0:((val-min)/(max-min))*100;
- input.style.setProperty('--progress',pct+'%');
- const wrap=input.closest('.range-ux');
- if(wrap){
-  wrap.style.setProperty('--progress',pct+'%');
-  const bubble=wrap.querySelector('.range-bubble');
-  if(bubble){
-   const source=input.id==='isoSlider'?Math.round(val):
-                input.id==='wbSlider'?Math.round(val)+'K':
-                input.id==='shutterSlider'?(shutterValues[Math.round(val)]||val):
-                input.id==='focusDistanceSlider'?val.toFixed(2):
-                (val>0?'+':'')+Number(val).toFixed(input.step&&String(input.step).includes('.')?1:0);
-   bubble.textContent=source;
-  }
+ input.style.setProperty('--p',pct+'%');
+ const card=input.closest('.control-card,.focus-manual-control');
+ if(card){
+   const bubble=card.querySelector('.slider-bubble');
+   if(bubble){
+     bubble.style.setProperty('--x',pct+'%');
+     bubble.textContent=formatSliderValue(input,val);
+   }
  }
 }
-function initRangeUX(){
- document.querySelectorAll('input[type="range"]').forEach(input=>{
-  if(input.closest('.range-ux'))return;
-  const wrap=document.createElement('div');wrap.className='range-ux';
-  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
-  const bubble=document.createElement('span');bubble.className='range-bubble mono';wrap.appendChild(bubble);
-  const start=()=>{wrap.classList.add('dragging');updateRangeVisual(input);tick()};
-  const end=()=>{wrap.classList.remove('dragging')};
-  input.addEventListener('pointerdown',start);
-  input.addEventListener('touchstart',start,{passive:true});
-  input.addEventListener('pointerup',end);
-  input.addEventListener('pointercancel',end);
-  input.addEventListener('touchend',end,{passive:true});
-  input.addEventListener('input',()=>updateRangeVisual(input));
-  input.addEventListener('change',()=>{updateRangeVisual(input);end()});
-  updateRangeVisual(input);
+function formatSliderValue(input,val){
+ if(input.id==='isoSlider') return 'ISO '+Math.round(val);
+ if(input.id==='wbSlider') return Math.round(val)+'K';
+ if(input.id==='shutterSlider') return shutterValues[Math.round(val)]||'AUTO';
+ if(input.id==='focusDistanceSlider') return Number(val).toFixed(2);
+ if(input.id==='proEvSlider') return (val>0?'+':'')+Number(val).toFixed(1);
+ return String(val);
+}
+
+const detentState=new Map();
+function shouldSoundDetent(input,val){
+ const now=performance.now();
+ const id=input.id;
+ let key='';
+ if(id==='isoSlider') key='iso:'+Math.round(val/100)*100;
+ else if(id==='wbSlider') key='wb:'+Math.round(val/500)*500;
+ else if(id==='proEvSlider') key='ev:'+Math.round(val*2)/2;
+ else if(id==='focusDistanceSlider') key='focus:'+Math.round(val*10)/10;
+ else if(id==='shutterSlider') key='shutter:'+Math.round(val);
+ else key='generic:'+Math.round(val);
+ const last=detentState.get(id)||{key:null,t:0};
+ if(last.key===key || now-last.t<55) return false;
+ detentState.set(id,{key,t:now});
+ return true;
+}
+function sliderSound(input,val){
+ if(!shouldSoundDetent(input,val)) return;
+ if(input.id==='shutterSlider') return sound.majorDetent();
+ if(input.id==='isoSlider'){
+   const major=[100,200,400,800,1600].includes(Math.round(val));
+   return major?sound.majorDetent():sound.detent();
+ }
+ if(input.id==='wbSlider'){
+   const major=Math.round(val)%1000===0;
+   return major?sound.majorDetent():sound.detent();
+ }
+ if(input.id==='proEvSlider'){
+   const major=Math.abs((val*2)-Math.round(val*2))<.001;
+   return major?sound.majorDetent():sound.detent();
+ }
+ sound.detent();
+}
+function initSliderUX(){
+ document.querySelectorAll('.pro-range').forEach(input=>{
+   const card=input.closest('.control-card,.focus-manual-control');
+   if(!card)return;
+   let bubble=card.querySelector('.slider-bubble');
+   if(!bubble){
+     bubble=document.createElement('div');
+     bubble.className='slider-bubble mono';
+     card.appendChild(bubble);
+   }
+   const start=()=>{card.classList.add('dragging');getAudio();updateRangeVisual(input)};
+   const end=()=>card.classList.remove('dragging');
+   input.addEventListener('pointerdown',start);
+   input.addEventListener('pointerup',end);
+   input.addEventListener('pointercancel',end);
+   input.addEventListener('input',()=>updateRangeVisual(input));
+   input.addEventListener('change',()=>{updateRangeVisual(input);end()});
+   updateRangeVisual(input);
  });
 }
 
-renderPresets();applyLook();syncGrid(true);syncHist(true);initRangeUX();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-sound-1',{updateViaCache:'none'}).catch(()=>{}));
+renderPresets();applyLook();syncGrid(true);syncHist(true);initSliderUX();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-audiofix-1',{updateViaCache:'none'}).catch(()=>{}));
 
-
-function makeSliderAlive(slider, formatter){
- if(!slider) return;
- const wrap=slider.closest('.control-card')||slider.parentElement;
- let bubble=wrap.querySelector('.slider-bubble');
- if(!bubble){
-   bubble=document.createElement('div');
-   bubble.className='slider-bubble mono';
-   wrap.appendChild(bubble);
- }
- const update=()=>{
-   const min=+slider.min,max=+slider.max,val=+slider.value;
-   const pct=max===min?0:(val-min)/(max-min);
-   slider.style.setProperty('--p',(pct*100).toFixed(2)+'%');
-   bubble.style.setProperty('--x',(pct*100).toFixed(2)+'%');
-   bubble.textContent=formatter?formatter(val):String(val);
- };
- const start=()=>{wrap.classList.add('dragging');update();tick('soft')};
- const end=()=>{wrap.classList.remove('dragging')};
- slider.addEventListener('pointerdown',start);
- slider.addEventListener('touchstart',start,{passive:true});
- slider.addEventListener('pointerup',end);
- slider.addEventListener('pointercancel',end);
- slider.addEventListener('touchend',end,{passive:true});
- slider.addEventListener('input',update);
- update();
-}
-
-makeSliderAlive($('isoSlider'),v=>'ISO '+Math.round(v));
-makeSliderAlive($('shutterSlider'),v=>shutterValues[Math.round(v)]||'AUTO');
-makeSliderAlive($('wbSlider'),v=>Math.round(v)+'K');
-makeSliderAlive($('proEvSlider'),v=>(v>0?'+':'')+Number(v).toFixed(1));
-makeSliderAlive($('focusDistanceSlider'),v=>Number(v).toFixed(2));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
