@@ -134,3 +134,8 @@ button{color:inherit}
 .back-button{font-size:24px;line-height:32px;font-family:"SFMono-Regular",monospace}
 .header-text{letter-spacing:.12em}
 .tool-tile span,.control-heading b,.bottom-control-grid b,.preset-copy b{letter-spacing:.07em}
+
+.build-badge{
+  position:absolute;top:calc(var(--safeTop) + 8px);right:18px;
+  font-size:7px;letter-spacing:.14em;color:#5d5d59;
+}
