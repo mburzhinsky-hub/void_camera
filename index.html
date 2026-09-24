@@ -2,178 +2,199 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
   <meta name="theme-color" content="#050505" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="VOID" />
-  <meta name="format-detection" content="telephone=no" />
   <title>VOID Camera</title>
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <main id="app" class="app">
-    <section class="viewfinder" aria-label="Camera viewfinder">
+<main id="app" class="app">
+  <section id="cameraPage" class="page camera-page active" aria-label="Camera">
+    <div id="finderFrame" class="finder-frame ratio-4-3">
       <video id="cameraVideo" playsinline muted autoplay></video>
-      <canvas id="glCanvas"></canvas>
+      <canvas id="analysisOverlay"></canvas>
+      <div id="gridOverlay" class="grid-overlay">
+        <i class="v a"></i><i class="v b"></i><i class="h a"></i><i class="h b"></i>
+      </div>
+      <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
 
-      <div id="gridOverlay" class="grid-overlay" aria-hidden="true">
-        <span class="v one"></span><span class="v two"></span>
-        <span class="h one"></span><span class="h two"></span>
+      <div class="capture-meta mono">
+        <b id="qualityReadout">12MP</b>
+        <span id="shutterReadout">AUTO</span>
+        <span id="isoReadout">ISO AUTO</span>
       </div>
 
-      <header class="topbar glass">
-        <div class="status-cluster">
-          <span id="clock" class="mono small">--:--</span>
-          <span class="brand-dot" aria-hidden="true"></span>
-          <span class="brand mono">VOID</span>
+      <div class="histogram-box">
+        <canvas id="histogramCanvas" width="120" height="52"></canvas>
+      </div>
+
+      <div class="af-mark mono"><i></i><span id="focusReadout">AF</span></div>
+
+      <div class="lens-stack mono" id="lensStack">
+        <button data-zoom="1" class="lens-pill active">1×</button>
+        <button data-zoom=".6" class="lens-pill muted">0.6</button>
+        <button data-zoom="3" class="lens-pill">3</button>
+      </div>
+    </div>
+
+    <div class="camera-shell">
+      <div class="quick-row">
+        <button id="rawQuick" class="quick-pill mono"><span>RAW</span><small>PRO</small></button>
+        <button id="hdrQuick" class="quick-pill mono"><span>HDR</span><small>AUTO</small></button>
+        <button id="gridQuick" class="quick-pill active" aria-label="Grid"><span class="mini-grid"></span></button>
+        <button id="histQuick" class="quick-pill active" aria-label="Histogram"><span class="mini-hist">▥</span></button>
+        <button id="proButton" class="quick-pill" aria-label="Pro controls"><span class="gear">⌾</span></button>
+      </div>
+
+      <div class="exposure-ruler">
+        <div class="exposure-labels mono"><span>-2</span><span>-1</span><b id="evReadout">0</b><span>+1</span><span>+2</span></div>
+        <input id="evSlider" class="ruler-range" type="range" min="-2" max="2" step=".1" value="0" />
+      </div>
+
+      <div class="mode-strip mono">
+        <button data-mode="SLO-MO">SLO-MO</button>
+        <button data-mode="VIDEO">VIDEO</button>
+        <button class="active" data-mode="PHOTO">PHOTO</button>
+        <button data-mode="PORTRAIT">PORTRAIT</button>
+        <button data-mode="MORE">MORE</button>
+      </div>
+
+      <div class="active-film mono">
+        <button id="presetButton"><small>FILM</small><b id="activeLookReadout">P400</b><span>›</span></button>
+      </div>
+
+      <div class="capture-row">
+        <button id="lastShotButton" class="thumb-button" aria-label="Last shot"><span id="lastShotThumb" class="thumb-empty mono">00</span></button>
+        <button id="shutterButton" class="shutter" aria-label="Take photo"><i></i></button>
+        <button id="switchCameraButton" class="switch-camera" aria-label="Switch camera">↻</button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </section>
+
+  <section id="proPage" class="page sub-page">
+    <header class="sub-header">
+      <button class="back-button" data-back>‹</button>
+      <div>
+        <h1 class="dot-title">PRO CONTROLS</h1>
+        <p class="mono">FULL CONTROL. BETTER PHOTOS.</p>
+      </div>
+      <button id="resetPro" class="header-text mono">RESET</button>
+    </header>
+
+    <div class="tool-grid">
+      <button id="rawTool" class="tool-tile"><b>RAW</b><span>RAW</span><i></i></button>
+      <button id="hdrTool" class="tool-tile"><b>HDR</b><span>HDR</span><i></i></button>
+      <button id="gridTool" class="tool-tile active"><b class="glyph">⌗</b><span>GRID</span><i></i></button>
+      <button id="peakingTool" class="tool-tile"><b class="glyph">△</b><span>PEAKING</span><i></i></button>
+      <button id="histTool" class="tool-tile active"><b class="glyph">▥</b><span>HISTOGRAM</span><i></i></button>
+      <button id="zebraTool" class="tool-tile"><b class="glyph zebra-icon">////</b><span>ZEBRA</span><i></i></button>
+      <button id="stabTool" class="tool-tile"><b class="glyph">≈</b><span>STABILISATION</span><i></i></button>
+      <button id="ratioTool" class="tool-tile active"><b id="ratioGlyph">4:3</b><span>RATIO</span><i></i></button>
+    </div>
+
+    <div class="pro-stack">
+      <article class="control-card">
+        <div class="control-heading">
+          <div class="control-icon">◉</div>
+          <div><b class="mono">ISO</b><small>Light Sensitivity</small></div>
+          <strong id="isoValue" class="value-pill mono">AUTO</strong>
         </div>
-        <div class="top-actions">
-          <button id="gridButton" class="icon-button active" aria-label="Toggle grid" title="Grid">
-            <span class="grid-icon" aria-hidden="true"></span>
-          </button>
-          <button id="proButton" class="icon-button" aria-label="Open pro controls" title="Pro controls">
-            <span class="sliders-icon" aria-hidden="true"></span>
-          </button>
-          <button id="switchCameraButton" class="icon-button" aria-label="Switch camera" title="Switch camera">
-            <span class="switch-icon" aria-hidden="true">↻</span>
-          </button>
+        <input id="isoSlider" class="pro-range" type="range" min="50" max="1600" step="10" value="100" disabled />
+        <div class="range-labels mono"><span>50</span><span>100</span><span>200</span><span>400</span><span>800</span><span>1600</span></div>
+        <em id="isoCapability" class="cap-note mono">CHECKING SENSOR</em>
+      </article>
+
+      <article class="control-card">
+        <div class="control-heading">
+          <div class="control-icon">◫</div>
+          <div><b class="mono">SHUTTER SPEED</b><small>Motion Control</small></div>
+          <strong id="shutterValue" class="value-pill mono">AUTO</strong>
         </div>
-      </header>
+        <input id="shutterSlider" class="pro-range" type="range" min="0" max="6" step="1" value="3" disabled />
+        <div class="range-labels mono"><span>1/4000</span><span>1/1000</span><span>1/250</span><span>1/60</span><span>1/15</span><span>1s</span></div>
+        <em id="shutterCapability" class="cap-note mono">BROWSER CAPABILITY</em>
+      </article>
 
-      <div class="left-readout glass subtle">
-        <div><span class="label">LOOK</span><strong id="activeLookReadout">VOID 400</strong></div>
-        <div><span class="label">ISO</span><strong id="isoReadout">AUTO</strong></div>
-        <div><span class="label">ZOOM</span><strong id="zoomReadout">1.0×</strong></div>
-      </div>
-
-      <div id="cameraStateBadge" class="camera-state mono">READY</div>
-
-      <section class="bottom-deck">
-        <div class="mode-strip mono" aria-label="Camera mode">
-          <button class="mode">VIDEO</button>
-          <button class="mode active">PHOTO</button>
-          <button class="mode">PORTRAIT</button>
+      <article class="control-card">
+        <div class="control-heading">
+          <div class="control-icon">◌</div>
+          <div><b class="mono">WHITE BALANCE</b><small>Colour Temperature</small></div>
+          <strong id="wbValue" class="value-pill mono">AUTO</strong>
         </div>
+        <input id="wbSlider" class="pro-range temp-range" type="range" min="2500" max="9000" step="100" value="5200" disabled />
+        <div class="range-labels mono"><span>2500K</span><span>4000K</span><span>5200K</span><span>7000K</span><span>9000K</span></div>
+        <em id="wbCapability" class="cap-note mono">BROWSER CAPABILITY</em>
+      </article>
 
-        <div id="presetRail" class="preset-rail" aria-label="Film looks"></div>
-
-        <div class="capture-row">
-          <button id="lastShotButton" class="thumbnail-button" aria-label="Last photo">
-            <span id="lastShotThumb" class="thumbnail-placeholder mono">00</span>
-          </button>
-          <button id="shutterButton" class="shutter" aria-label="Take photo">
-            <span class="shutter-core"></span>
-          </button>
-          <button id="lookButton" class="round-action" aria-label="Open look controls">
-            <span class="mono">FX</span>
-          </button>
+      <article class="control-card">
+        <div class="control-heading">
+          <div class="control-icon">☼</div>
+          <div><b class="mono">EXPOSURE COMPENSATION</b><small>Brighter or Darker</small></div>
+          <strong id="proEvValue" class="value-pill mono">0.0</strong>
         </div>
+        <input id="proEvSlider" class="pro-range" type="range" min="-3" max="3" step=".1" value="0" />
+        <div class="range-labels mono"><span>-3</span><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span></div>
+        <em id="evCapability" class="cap-note mono">DIGITAL FALLBACK</em>
+      </article>
+    </div>
 
-        <div class="home-indicator" aria-hidden="true"></div>
-      </section>
-    </section>
+    <div class="bottom-control-grid">
+      <button id="focusCard"><small>FOCUS</small><b id="focusCardValue">AF</b><span>⌄</span></button>
+      <button id="meteringCard"><small>METERING</small><b>EVALUATIVE</b><span>⌄</span></button>
+      <button id="colorCard"><small>COLOR PROFILE</small><b id="colorCardValue">P400</b><span>⌄</span></button>
+    </div>
+    <div class="home-indicator"></div>
+  </section>
 
-    <section id="proPanel" class="sheet" aria-hidden="true">
-      <div class="sheet-handle"></div>
-      <div class="sheet-head">
-        <div>
-          <span class="eyebrow mono">MANUAL / LIVE</span>
-          <h2 class="dot-title">PRO CONTROL</h2>
-        </div>
-        <button id="closeProButton" class="icon-button" aria-label="Close pro controls">×</button>
+  <section id="presetsPage" class="page sub-page">
+    <header class="sub-header">
+      <button class="back-button" data-back>‹</button>
+      <div>
+        <h1 class="dot-title">FILM PRESETS</h1>
+        <p class="mono">TIMELESS COLOURS. MODERN SENSIBILITY.</p>
       </div>
+      <button class="header-text mono">•••</button>
+    </header>
 
-      <div class="control-card">
-        <div class="control-title">
-          <div><span class="label">ZOOM</span><strong id="zoomValue">1.0×</strong></div>
-          <span id="zoomMode" class="capability mono">DIGITAL</span>
-        </div>
-        <input id="zoomSlider" class="void-slider" type="range" min="1" max="4" step="0.05" value="1" />
-        <div class="tick-row mono"><span>1×</span><span>2×</span><span>3×</span><span>4×</span></div>
-      </div>
+    <nav id="presetTabs" class="preset-tabs mono">
+      <button class="active" data-category="ALL">ALL</button>
+      <button data-category="FILM">FILM</button>
+      <button data-category="CINE">CINE</button>
+      <button data-category="B&W">B&W</button>
+    </nav>
 
-      <div class="control-card">
-        <div class="control-title">
-          <div><span class="label">LOOK CHARACTER</span><strong id="lookValue">100%</strong></div>
-          <span class="capability mono">LIVE</span>
-        </div>
-        <input id="lookSlider" class="void-slider" type="range" min="0" max="100" step="1" value="100" />
-      </div>
+    <div id="presetGrid" class="preset-grid"></div>
+    <button id="applyPresetButton" class="apply-preset mono"><span>☷</span> APPLY PRESET</button>
+    <div class="home-indicator"></div>
+  </section>
 
-      <div class="control-card">
-        <div class="control-title">
-          <div><span class="label">ISO</span><strong id="isoValue">AUTO</strong></div>
-          <span id="isoCapability" class="capability mono muted">CHECKING</span>
-        </div>
-        <input id="isoSlider" class="void-slider" type="range" min="50" max="1600" step="10" value="100" disabled />
-        <p id="isoHelp" class="help">Sensor ISO appears only when the browser exposes a real camera ISO control.</p>
-      </div>
+  <section id="reviewPanel" class="review-panel">
+    <img id="reviewImage" alt="Captured VOID photo" />
+    <header><button id="reviewCloseButton">×</button><b class="mono">VOID / CAPTURE</b><button id="shareButton" class="mono">SHARE</button></header>
+    <footer><div><small>LOOK</small><b id="reviewLook">P400</b></div><button id="saveButton" class="mono">SAVE / OPEN</button></footer>
+  </section>
 
-      <div class="toggle-grid">
-        <button id="zebraButton" class="toggle-card">
-          <span class="toggle-glyph zebra-glyph"></span>
-          <span><strong>ZEBRA</strong><small>Highlight warning</small></span>
-          <i class="toggle-led"></i>
-        </button>
-        <button id="gridPanelButton" class="toggle-card active">
-          <span class="toggle-glyph grid-glyph"></span>
-          <span><strong>GRID</strong><small>Rule of thirds</small></span>
-          <i class="toggle-led"></i>
-        </button>
-      </div>
+  <section id="permissionGate" class="permission-gate">
+    <div class="void-logo mono">V·O·I·D</div>
+    <div class="gate-copy">
+      <p class="mono">PRO TOOLS. FILM SOUL.</p>
+      <h1>Choose the film.<br>Take the shot.</h1>
+      <p>Live film looks, tactile controls and a camera-first interface.</p>
+      <button id="startCameraButton" class="mono">OPEN CAMERA</button>
+      <small>Photos stay on your device in this prototype.</small>
+    </div>
+  </section>
 
-      <div class="support-note">
-        <span class="mono">CAPABILITY AWARE</span>
-        <p>VOID never pretends a web control is a real sensor control. Unsupported manual functions stay clearly marked until the native build.</p>
-      </div>
-    </section>
-
-    <section id="lookPanel" class="sheet compact" aria-hidden="true">
-      <div class="sheet-handle"></div>
-      <div class="sheet-head">
-        <div>
-          <span class="eyebrow mono">FILM ENGINE</span>
-          <h2 class="dot-title">LOOK DETAILS</h2>
-        </div>
-        <button id="closeLookButton" class="icon-button" aria-label="Close look controls">×</button>
-      </div>
-      <div id="lookDetail" class="look-detail"></div>
-    </section>
-
-    <section id="reviewPanel" class="review" aria-hidden="true">
-      <img id="reviewImage" alt="Captured VOID photo" />
-      <div class="review-top glass">
-        <button id="reviewCloseButton" class="icon-button" aria-label="Close photo review">×</button>
-        <span class="mono">VOID / CAPTURE</span>
-        <button id="shareButton" class="text-button mono">SHARE</button>
-      </div>
-      <div class="review-bottom glass">
-        <div>
-          <span class="label">LOOK</span>
-          <strong id="reviewLook">VOID 400</strong>
-        </div>
-        <button id="saveButton" class="save-button mono">SAVE / OPEN</button>
-      </div>
-    </section>
-
-    <section id="permissionGate" class="gate">
-      <div class="gate-mark" aria-hidden="true">
-        <span>V</span><span>O</span><span>I</span><span>D</span>
-      </div>
-      <p class="eyebrow mono">CAMERA / FILM / CONTROL</p>
-      <h1>Choose the look.<br/>Then take the shot.</h1>
-      <p class="gate-copy">Live film looks before capture. Built for a phone, not a desktop.</p>
-      <button id="startCameraButton" class="primary-button mono">OPEN CAMERA</button>
-      <p class="permission-note">Camera access stays in your browser. The prototype does not upload your photos.</p>
-    </section>
-
-    <div id="toast" class="toast mono" role="status" aria-live="polite"></div>
-  </main>
-
-  <script src="./app.js" defer></script>
+  <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
+  <div id="toast" class="toast mono"></div>
+</main>
+<script src="./app.js" defer></script>
 </body>
 </html>
