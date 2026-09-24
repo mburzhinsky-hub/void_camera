@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="118" fill="#050505"/>
+<g fill="#f2f2ef">
+<circle cx="128" cy="180" r="18"/><circle cx="128" cy="256" r="18"/><circle cx="128" cy="332" r="18"/>
+<circle cx="202" cy="332" r="18"/><circle cx="276" cy="332" r="18"/><circle cx="350" cy="332" r="18"/>
+<circle cx="350" cy="180" r="18"/><circle cx="350" cy="256" r="18"/>
+</g>
+<text x="256" y="435" text-anchor="middle" fill="#f2f2ef" font-family="monospace" font-size="42" letter-spacing="12">VOID</text>
+</svg>
