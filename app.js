@@ -5,22 +5,22 @@ const finder=$('finderFrame'), analysisOverlay=$('analysisOverlay'), analysisCtx
 const histCanvas=$('histogramCanvas'), histCtx=histCanvas.getContext('2d');
 const analysisBuffer=$('analysisBuffer'), bufferCtx=analysisBuffer.getContext('2d',{willReadFrequently:true});
 
-let stream=null, track=null, facingMode='environment', activeLook='P400', currentCategory='ALL';
+let stream=null, track=null, facingMode='environment', activeLook='FUJI CLASSIC', currentCategory='ALL';
 let capturedBlob=null,lastObjectUrl=null,lastTickStep=null;
 let rawEnabled=false,hdrEnabled=false,gridEnabled=true,histEnabled=true,zebraEnabled=false,peakingEnabled=false,stabEnabled=false;
 let currentRatio='4:3', currentZoom=1, currentEV=0, lookStrength=1, analysisRAF=0;
 
 const looks=[
- {name:'P400',cat:'FILM',desc:'Warm skin, soft highlight roll-off',filter:'contrast(.96) saturate(.94) sepia(.10) hue-rotate(-4deg)',bg:'linear-gradient(135deg,#2a211c 0%,#8d644a 42%,#d8c0a2 100%)'},
- {name:'P160',cat:'FILM',desc:'Clean portrait negative',filter:'contrast(.93) saturate(.86) sepia(.06)',bg:'linear-gradient(135deg,#37312d,#9f8876,#ded4c7)'},
- {name:'CHROME',cat:'FILM',desc:'Muted documentary colour',filter:'contrast(1.08) saturate(.72) brightness(.98)',bg:'linear-gradient(135deg,#1f2a31,#5f6b6e,#b5aa93)'},
- {name:'NEGATIVE',cat:'FILM',desc:'Dense shadows, rich reds',filter:'contrast(1.12) saturate(.88) hue-rotate(-7deg)',bg:'linear-gradient(135deg,#23373b,#80544b,#cc8669)'},
- {name:'GOLD 200',cat:'FILM',desc:'Golden daylight nostalgia',filter:'contrast(1.02) saturate(1.05) sepia(.16) hue-rotate(-5deg)',bg:'linear-gradient(135deg,#57391f,#c58d45,#f1cf82)'},
- {name:'250D',cat:'CINE',desc:'Cinematic daylight stock',filter:'contrast(.95) saturate(.9) sepia(.05) brightness(1.02)',bg:'linear-gradient(135deg,#536b61,#b69c6f,#e0caa5)'},
- {name:'500T',cat:'CINE',desc:'Tungsten nights and cyan shadow',filter:'contrast(1.05) saturate(.88) hue-rotate(8deg)',bg:'linear-gradient(135deg,#102d3b,#57556d,#d47c5c)'},
- {name:'BLEACH',cat:'CINE',desc:'Silver contrast, low colour',filter:'contrast(1.22) saturate(.44) brightness(.98)',bg:'linear-gradient(135deg,#202020,#77766d,#c8c5b5)'},
- {name:'MONO',cat:'B&W',desc:'Deep monochrome midtones',filter:'grayscale(1) contrast(1.16)',bg:'linear-gradient(135deg,#111,#5f5f5f,#ddd)'},
- {name:'GRAIN 3200',cat:'B&W',desc:'Pushed high-contrast reportage',filter:'grayscale(1) contrast(1.35) brightness(.94)',bg:'linear-gradient(135deg,#070707,#4a4a4a,#bdbdbd)'}
+ {name:'FUJI CLASSIC',cat:'FUJI',desc:'Rich tones, true to life',filter:'contrast(.97) saturate(.92) sepia(.09) hue-rotate(-4deg)',bg:'linear-gradient(135deg,#38271f 0%,#8b5c38 46%,#d8aa67 100%)'},
+ {name:'FUJI SOFT',cat:'FUJI',desc:'Muted contrast, gentle film',filter:'contrast(.90) saturate(.82) brightness(1.03)',bg:'linear-gradient(135deg,#3f443d,#8fa28f,#d7d0c4)'},
+ {name:'FUJI STREET',cat:'FUJI',desc:'Bold colours, urban soul',filter:'contrast(1.10) saturate(.94) hue-rotate(-7deg)',bg:'linear-gradient(135deg,#1e2f35,#7b5a4f,#c86b4e)'},
+ {name:'FUJI WARM',cat:'FUJI',desc:'Golden skin, nostalgic feel',filter:'contrast(.98) saturate(1.02) sepia(.18) hue-rotate(-5deg)',bg:'linear-gradient(135deg,#56351f,#bd7f40,#e6bc72)'},
+ {name:'FUJI COOL',cat:'FUJI',desc:'Crisp tones, modern look',filter:'contrast(1.03) saturate(.88) hue-rotate(8deg)',bg:'linear-gradient(135deg,#1d3943,#6b8f9c,#b8c8c9)'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Timeless black and white',filter:'grayscale(1) contrast(1.14)',bg:'linear-gradient(135deg,#111,#666,#d6d6d6)'},
+ {name:'PORTRAIT 400',cat:'MODERN',desc:'Soft skin, clean colour',filter:'contrast(.95) saturate(.90) sepia(.06)',bg:'linear-gradient(135deg,#43362f,#a07d68,#d9c6b7)'},
+ {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight stock',filter:'contrast(.95) saturate(.90) sepia(.05) brightness(1.02)',bg:'linear-gradient(135deg,#536b61,#b69c6f,#e0caa5)'},
+ {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Night colour, cyan shadows',filter:'contrast(1.05) saturate(.88) hue-rotate(8deg)',bg:'linear-gradient(135deg,#102d3b,#57556d,#d47c5c)'},
+ {name:'BLEACH',cat:'CINEMA',desc:'Silver contrast, low colour',filter:'contrast(1.22) saturate(.44) brightness(.98)',bg:'linear-gradient(135deg,#202020,#77766d,#c8c5b5)'}
 ];
 
 function showPage(id){ pages.forEach(p=>p.classList.toggle('active',p.id===id)); tick('soft'); }
@@ -49,7 +49,13 @@ function renderPresets(){
   grid.appendChild(b);
  });
 }
-document.querySelectorAll('#presetTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentCategory=b.dataset.category;renderPresets();tick()});
+document.querySelectorAll('#presetTabs button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+ currentCategory=b.dataset.category;
+ renderPresets();
+ tick();
+});
 $('presetButton').onclick=()=>{renderPresets();showPage('presetsPage')};
 $('colorCard').onclick=()=>{renderPresets();showPage('presetsPage')};
 $('applyPresetButton').onclick=()=>{applyLook();showPage('cameraPage');showToast(activeLook+' APPLIED')};
@@ -193,4 +199,4 @@ function saveCapture(){if(!lastObjectUrl)return;const a=document.createElement('
 $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-0021',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-ref-1',{updateViaCache:'none'}).catch(()=>{}));
