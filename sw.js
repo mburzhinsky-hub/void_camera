@@ -1,9 +1,9 @@
-const CACHE='void-camera-audiofix-20260925-1';
+const CACHE='void-camera-layoutfix-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-audiofix-1',
-  './app.js?v=20260925-void-audiofix-1',
+  './styles.css?v=20260925-void-layoutfix-1',
+  './app.js?v=20260925-void-layoutfix-1',
   './manifest.webmanifest',
   './icon.svg',
   './assets/presets/classic_city.svg',
