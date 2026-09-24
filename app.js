@@ -15,16 +15,16 @@ let presetFrameData='';
 const favorites=new Set();
 
 const looks=[
- {name:'FUJI CLASSIC',cat:'FUJI',desc:'Muted documentary contrast',filter:'contrast(1.13) saturate(.78) brightness(.97) sepia(.05) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'FUJI SOFT',cat:'FUJI',desc:'Pastel skin, lifted shadows',filter:'contrast(.86) saturate(.76) brightness(1.06) sepia(.06) hue-rotate(2deg)',thumb:'./assets/presets/soft_blossom.svg'},
- {name:'FUJI STREET',cat:'FUJI',desc:'Dense blacks, bold urban colour',filter:'contrast(1.24) saturate(1.10) brightness(.94) sepia(.03) hue-rotate(-7deg)',thumb:'./assets/presets/street_urban.svg'},
- {name:'FUJI WARM',cat:'FUJI',desc:'Amber highlights, warm skin',filter:'contrast(1.03) saturate(1.13) brightness(1.01) sepia(.24) hue-rotate(-7deg)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'FUJI COOL',cat:'FUJI',desc:'Cyan shadows, clean highlights',filter:'contrast(1.12) saturate(.90) brightness(.98) hue-rotate(11deg)',thumb:'./assets/presets/cool_bridge.svg'},
- {name:'FUJI MONO',cat:'B&W',desc:'Acros-style deep monochrome',filter:'grayscale(1) contrast(1.34) brightness(.94)',thumb:'./assets/presets/mono_portrait.svg'},
- {name:'PORTRAIT 400',cat:'MODERN',desc:'Cream skin, soft highlight rolloff',filter:'contrast(.91) saturate(.88) brightness(1.04) sepia(.11) hue-rotate(-3deg)',thumb:'./assets/presets/portrait_400.svg'},
- {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Cinematic daylight, soft greens',filter:'contrast(.94) saturate(.82) brightness(1.02) sepia(.07) hue-rotate(4deg)',thumb:'./assets/presets/daylight_250.svg'},
- {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Teal shadows, warm practicals',filter:'contrast(1.14) saturate(1.03) brightness(.93) hue-rotate(13deg)',thumb:'./assets/presets/tungsten_500.svg'},
- {name:'BLEACH',cat:'CINEMA',desc:'Silver density, crushed colour',filter:'contrast(1.38) saturate(.34) brightness(.92)',thumb:'./assets/presets/bleach.svg'}
+ {name:'FUJI CLASSIC',cat:'FUJI',desc:'Muted documentary colour',filter:'contrast(1.12) saturate(.78) brightness(.98) sepia(.05) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'FUJI SOFT',cat:'FUJI',desc:'Pastel skin, lifted shadows',filter:'contrast(.86) saturate(.76) brightness(1.08) sepia(.05) hue-rotate(-2deg)',thumb:'./assets/presets/soft_blossom.svg'},
+ {name:'FUJI STREET',cat:'FUJI',desc:'Dense blacks, urban colour',filter:'contrast(1.28) saturate(1.14) brightness(.95) hue-rotate(-8deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'FUJI WARM',cat:'FUJI',desc:'Amber highlights, soft greens',filter:'contrast(1.02) saturate(1.08) sepia(.24) brightness(1.01) hue-rotate(-7deg)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'FUJI COOL',cat:'FUJI',desc:'Clean cyan, crisp daylight',filter:'contrast(1.09) saturate(.88) brightness(1.00) hue-rotate(12deg)',thumb:'./assets/presets/cool_bridge.svg'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Fine-grain tonal monochrome',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
+ {name:'PORTRAIT 400',cat:'MODERN',desc:'Warm skin, gentle roll-off',filter:'contrast(.92) saturate(.92) brightness(1.05) sepia(.10) hue-rotate(-3deg)',thumb:'./assets/presets/portrait_400.svg'},
+ {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Soft highlight cinema stock',filter:'contrast(.94) saturate(.84) brightness(1.02) sepia(.08) hue-rotate(-4deg)',thumb:'./assets/presets/daylight_250.svg'},
+ {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Cyan shadows, hot practicals',filter:'contrast(1.16) saturate(1.02) brightness(.93) hue-rotate(15deg)',thumb:'./assets/presets/tungsten_500.svg'},
+ {name:'BLEACH',cat:'CINEMA',desc:'Silver blacks, restrained colour',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
 ];
 
 function snapshotPresetFrame(){
@@ -103,15 +103,13 @@ function applyLook(){
  video.style.filter=buildPreviewFilter();
 }
 function renderPresets(){
- const grid=$('presetGrid');grid.innerHTML='';
- looks.filter(l=>currentCategory==='ALL'||l.cat===currentCategory).forEach(l=>{
+ const grid=$('presetGrid'); grid.innerHTML='';
+ looks.filter(l=>currentCategory==='ALL'||(currentCategory==='FAV'?favorites.has(l.name):l.cat===currentCategory)).forEach(l=>{
   const card=document.createElement('article');
   card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
-  card.innerHTML=`<div class="preset-preview"><img src="${l.thumb}" alt="" draggable="false"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
-  const img=card.querySelector('img');
-  img.style.filter=l.filter;
+  card.innerHTML=`<div class="preset-preview" style="background-image:url('${l.thumb}');filter:${l.filter}"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
   const choose=()=>{pendingLook=l.name;renderPresets();tick('major')};
   card.onclick=choose;
   card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
@@ -398,3 +396,47 @@ function initRangeUX(){
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initRangeUX();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-sliders-1',{updateViaCache:'none'}).catch(()=>{}));
+
+
+function makeSliderAlive(slider, formatter){
+ if(!slider) return;
+ const wrap=slider.closest('.control-card')||slider.parentElement;
+ let bubble=wrap.querySelector('.slider-bubble');
+ if(!bubble){
+   bubble=document.createElement('div');
+   bubble.className='slider-bubble mono';
+   wrap.appendChild(bubble);
+ }
+ const update=()=>{
+   const min=+slider.min,max=+slider.max,val=+slider.value;
+   const pct=max===min?0:(val-min)/(max-min);
+   slider.style.setProperty('--p',(pct*100).toFixed(2)+'%');
+   bubble.style.setProperty('--x',(pct*100).toFixed(2)+'%');
+   bubble.textContent=formatter?formatter(val):String(val);
+ };
+ const start=()=>{wrap.classList.add('dragging');update();tick('soft')};
+ const end=()=>{wrap.classList.remove('dragging')};
+ slider.addEventListener('pointerdown',start);
+ slider.addEventListener('touchstart',start,{passive:true});
+ slider.addEventListener('pointerup',end);
+ slider.addEventListener('pointercancel',end);
+ slider.addEventListener('touchend',end,{passive:true});
+ slider.addEventListener('input',update);
+ update();
+}
+
+makeSliderAlive($('isoSlider'),v=>'ISO '+Math.round(v));
+makeSliderAlive($('shutterSlider'),v=>shutterValues[Math.round(v)]||'AUTO');
+makeSliderAlive($('wbSlider'),v=>Math.round(v)+'K');
+makeSliderAlive($('proEvSlider'),v=>(v>0?'+':'')+Number(v).toFixed(1));
+makeSliderAlive($('focusDistanceSlider'),v=>Number(v).toFixed(2));
+
+const presetMenu=$('presetMenuButton');
+if(presetMenu) presetMenu.onclick=()=>{
+ const onlyFav=currentCategory==='FAV';
+ if(onlyFav){currentCategory='ALL';showToast('ALL PRESETS')}
+ else{currentCategory='FAV';showToast('FAVORITES')}
+ document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
+ renderPresets();
+ tick('major');
+};
