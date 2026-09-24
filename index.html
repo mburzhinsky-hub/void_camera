@@ -14,28 +14,36 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-0021" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-ref-1" />
 </head>
 <body>
 <main id="app" class="app">
-  <section id="cameraPage" class="page camera-page active" aria-label="Camera">
-    <div class="top-controls">
-      <div class="quick-row">
-        <button id="rawQuick" class="quick-pill mono"><span>RAW</span></button>
-        <button id="hdrQuick" class="quick-pill mono"><span>HDR</span></button>
-        <button id="gridQuick" class="quick-pill active" aria-label="Grid"><span class="mini-grid"></span></button>
-        <button id="histQuick" class="quick-pill active" aria-label="Histogram"><span class="mini-hist">▥</span></button>
-        <button id="proButton" class="quick-pill" aria-label="Pro controls"><span class="gear">⚙</span></button>
-      </div>
-    </div>
 
-    <div id="finderFrame" class="finder-frame ratio-4-3">
+  <!-- CAMERA -->
+  <section id="cameraPage" class="page camera-page active" aria-label="Camera">
+    <header class="camera-top">
+      <div class="quick-row">
+        <button id="rawQuick" class="quick-button mono" aria-label="RAW"><span>RAW</span></button>
+        <button id="hdrQuick" class="quick-button mono" aria-label="HDR"><span>HDR</span></button>
+        <button id="gridQuick" class="quick-button active" aria-label="Grid">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+        </button>
+        <button id="histQuick" class="quick-button active" aria-label="Histogram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V5M6 19v-4M9 19V9M12 19V6M15 19v8M18 19V4M21 19v-7"/></svg>
+        </button>
+        <button id="proButton" class="quick-button" aria-label="Pro controls">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.2A3.8 3.8 0 1 0 12 15.8 3.8 3.8 0 0 0 12 8.2Zm0-5.2v2.1M12 18.9V21M3 12h2.1M18.9 12H21M5.64 5.64l1.49 1.49M16.87 16.87l1.49 1.49M18.36 5.64l-1.49 1.49M7.13 16.87l-1.49 1.49"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section id="finderFrame" class="finder-frame ratio-4-3">
       <video id="cameraVideo" playsinline muted autoplay></video>
       <canvas id="analysisOverlay"></canvas>
-      <div id="gridOverlay" class="grid-overlay">
+
+      <div id="gridOverlay" class="grid-overlay" aria-hidden="true">
         <i class="v a"></i><i class="v b"></i><i class="h a"></i><i class="h b"></i>
       </div>
-      <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
 
       <div class="capture-meta mono">
         <b id="qualityReadout">12MP RAW</b>
@@ -44,19 +52,19 @@
       </div>
 
       <div class="histogram-box">
-        <canvas id="histogramCanvas" width="120" height="52"></canvas>
+        <canvas id="histogramCanvas" width="108" height="46"></canvas>
       </div>
-
-      <div class="af-mark mono"><i></i><span id="focusReadout">AF</span></div>
 
       <div class="lens-stack mono" id="lensStack">
         <button data-zoom="1" class="lens-pill active">1×</button>
         <button data-zoom=".6" class="lens-pill muted">0.6</button>
         <button data-zoom="3" class="lens-pill">3</button>
       </div>
-    </div>
 
-    <div class="camera-shell">
+      <div class="af-mark mono"><i></i><span id="focusReadout">AF</span></div>
+    </section>
+
+    <section class="camera-bottom">
       <div class="exposure-ruler">
         <div class="exposure-labels mono"><span>-2</span><span>-1</span><b id="evReadout">0</b><span>+1</span><span>+2</span></div>
         <input id="evSlider" class="ruler-range" type="range" min="-2" max="2" step=".1" value="0" />
@@ -70,22 +78,33 @@
         <button data-mode="MORE">MORE</button>
       </div>
 
-      <div class="active-film mono">
-        <button id="presetButton"><small>FILM</small><b id="activeLookReadout">P400</b><span>›</span></button>
-      </div>
+      <button id="presetButton" hidden></button>
+      <span id="activeLookReadout" hidden>P400</span>
 
       <div class="capture-row">
-        <button id="lastShotButton" class="thumb-button" aria-label="Last shot"><span id="lastShotThumb" class="thumb-empty mono">00</span></button>
+        <button id="lastShotButton" class="thumb-button" aria-label="Last shot">
+          <span id="lastShotThumb" class="thumb-empty mono">00</span>
+        </button>
+
         <button id="shutterButton" class="shutter" aria-label="Take photo"><i></i></button>
-        <button id="switchCameraButton" class="switch-camera" aria-label="Switch camera">↻</button>
+
+        <button id="switchCameraButton" class="switch-camera" aria-label="Switch camera">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.5 8A8 8 0 0 0 5.2 6.2L3.5 8M3.5 8V3.8M3.5 8h4.2M4.5 16a8 8 0 0 0 14.3 1.8l1.7-1.8M20.5 16v4.2M20.5 16h-4.2"/>
+          </svg>
+        </button>
       </div>
+
       <div class="home-indicator"></div>
-    </div>
+    </section>
   </section>
 
+  <!-- PRO CONTROLS -->
   <section id="proPage" class="page sub-page">
     <header class="sub-header">
-      <button class="back-button" data-back>←</button>
+      <button class="back-button" data-back aria-label="Back">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
       <div>
         <h1 class="dot-title">PRO CONTROLS</h1>
         <p class="mono">FULL CONTROL. BETTER PHOTOS.</p>
@@ -96,12 +115,12 @@
     <div class="tool-grid">
       <button id="rawTool" class="tool-tile"><b>RAW</b><span>RAW</span><i></i></button>
       <button id="hdrTool" class="tool-tile"><b>HDR</b><span>HDR</span><i></i></button>
-      <button id="gridTool" class="tool-tile active"><b class="glyph">⌗</b><span>GRID</span><i></i></button>
-      <button id="peakingTool" class="tool-tile"><b class="glyph">△</b><span>PEAKING</span><i></i></button>
-      <button id="histTool" class="tool-tile active"><b class="glyph">▥</b><span>HISTOGRAM</span><i></i></button>
-      <button id="zebraTool" class="tool-tile"><b class="glyph zebra-icon">////</b><span>ZEBRA</span><i></i></button>
-      <button id="stabTool" class="tool-tile"><b class="glyph">≈</b><span>STABILISATION</span><i></i></button>
-      <button id="ratioTool" class="tool-tile active"><b id="ratioGlyph">4:3</b><span>RATIO</span><i></i></button>
+      <button id="gridTool" class="tool-tile active"><b class="line-icon grid-line"></b><span>GRID</span><i></i></button>
+      <button id="peakingTool" class="tool-tile"><b class="line-icon peak-line"></b><span>PEAKING</span><i></i></button>
+      <button id="histTool" class="tool-tile active"><b class="line-icon hist-line"></b><span>HISTOGRAM</span><i></i></button>
+      <button id="zebraTool" class="tool-tile"><b class="line-icon zebra-line"></b><span>ZEBRA</span><i></i></button>
+      <button id="stabTool" class="tool-tile"><b class="line-icon stab-line">≈</b><span>STABILISATION</span><i></i></button>
+      <button id="ratioTool" class="tool-tile active"><b id="ratioGlyph" class="ratio-icon">4:3</b><span>RATIO</span><i></i></button>
     </div>
 
     <div class="pro-stack">
@@ -155,12 +174,16 @@
       <button id="meteringCard"><small>METERING</small><b>EVALUATIVE</b><span>⌄</span></button>
       <button id="colorCard"><small>COLOR PROFILE</small><b id="colorCardValue">P400</b><span>⌄</span></button>
     </div>
+
     <div class="home-indicator"></div>
   </section>
 
-  <section id="presetsPage" class="page sub-page">
+  <!-- FILM PRESETS -->
+  <section id="presetsPage" class="page sub-page presets-page">
     <header class="sub-header">
-      <button class="back-button" data-back>←</button>
+      <button class="back-button" data-back aria-label="Back">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
       <div>
         <h1 class="dot-title">FILM PRESETS</h1>
         <p class="mono">TIMELESS COLOURS. MODERN SENSIBILITY.</p>
@@ -170,24 +193,40 @@
 
     <nav id="presetTabs" class="preset-tabs mono">
       <button class="active" data-category="ALL">ALL</button>
-      <button data-category="FILM">FILM</button>
-      <button data-category="CINE">CINE</button>
+      <button data-category="FUJI">FUJI</button>
+      <button data-category="MODERN">MODERN</button>
       <button data-category="B&W">B&W</button>
+      <button data-category="CINEMA">CINEMA</button>
     </nav>
 
     <div id="presetGrid" class="preset-grid"></div>
-    <button id="applyPresetButton" class="apply-preset mono"><span>☷</span> APPLY PRESET</button>
+
+    <button id="applyPresetButton" class="apply-preset mono">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M7 4v6M4 17h16M17 14v6M4 12h16M12 9v6"/></svg>
+      <span>APPLY PRESET</span>
+    </button>
+
     <div class="home-indicator"></div>
   </section>
 
+  <!-- REVIEW -->
   <section id="reviewPanel" class="review-panel">
     <img id="reviewImage" alt="Captured VOID photo" />
-    <header><button id="reviewCloseButton">×</button><b class="mono">VOID / CAPTURE</b><button id="shareButton" class="mono">SHARE</button></header>
-    <footer><div><small>LOOK</small><b id="reviewLook">P400</b></div><button id="saveButton" class="mono">SAVE / OPEN</button></footer>
+    <header>
+      <button id="reviewCloseButton">×</button>
+      <b class="mono">VOID / CAPTURE</b>
+      <button id="shareButton" class="mono">SHARE</button>
+    </header>
+    <footer>
+      <div><small>LOOK</small><b id="reviewLook">P400</b></div>
+      <button id="saveButton" class="mono">SAVE / OPEN</button>
+    </footer>
   </section>
 
+  <!-- PERMISSION -->
   <section id="permissionGate" class="permission-gate">
-    <div class="void-logo mono">V·O·I·D</div><div class="build-badge mono">BUILD 0.2.1</div>
+    <div class="void-logo mono">V·O·I·D</div>
+    <div class="build-badge mono">BUILD 0.3 REF</div>
     <div class="gate-copy">
       <p class="mono">PRO TOOLS. FILM SOUL.</p>
       <h1>Choose the film.<br>Take the shot.</h1>
@@ -200,6 +239,6 @@
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./app.js?v=20260925-0021" defer></script>
+<script src="./app.js?v=20260925-void-ref-1" defer></script>
 </body>
 </html>
