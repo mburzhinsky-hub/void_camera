@@ -63,11 +63,14 @@ function applyLook(){
 function renderPresets(){
  const grid=$('presetGrid'); grid.innerHTML='';
  looks.filter(l=>currentCategory==='ALL'||l.cat===currentCategory).forEach(l=>{
-  const card=document.createElement('button');
+  const card=document.createElement('article');
   card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
+  card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
   card.innerHTML=`<div class="preset-preview" style="--image:url('${l.thumb}');filter:${l.filter}"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
-  card.onclick=()=>{pendingLook=l.name;renderPresets();tick('major')};
+  const choose=()=>{pendingLook=l.name;renderPresets();tick('major')};
+  card.onclick=choose;
+  card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
   const heart=card.querySelector('.heart');
   heart.onclick=e=>{e.stopPropagation();favorites.has(l.name)?favorites.delete(l.name):favorites.add(l.name);renderPresets();tick()};
   grid.appendChild(card);
