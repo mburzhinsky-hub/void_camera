@@ -1,4 +1,4 @@
-const CACHE='void-camera-sliders-20260925-1';
+const CACHE='void-camera-controls-20260925-1';
 const ASSETS=[
   './',
   './index.html',
