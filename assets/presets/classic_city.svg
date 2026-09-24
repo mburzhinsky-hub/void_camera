@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2c3440"/><stop offset=".52" stop-color="#a56a45"/><stop offset="1" stop-color="#201b1a"/></linearGradient><linearGradient id="road" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#171717"/><stop offset="1" stop-color="#473326"/></linearGradient><filter id="grain"><feTurbulence baseFrequency=".9" numOctaves="2" seed="3" type="fractalNoise"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .055 0"/></filter></defs>
+<rect width="600" height="360" fill="url(#sky)"/><circle cx="332" cy="168" r="34" fill="#efb675" opacity=".8"/>
+<g fill="#111419"><rect x="18" y="105" width="105" height="200"/><rect x="132" y="65" width="96" height="238"/><rect x="391" y="98" width="98" height="207"/><rect x="502" y="53" width="76" height="252"/></g>
+<g fill="#d7a26f" opacity=".55"><rect x="151" y="88" width="8" height="12"/><rect x="177" y="115" width="8" height="12"/><rect x="421" y="136" width="8" height="12"/><rect x="541" y="98" width="8" height="12"/></g>
+<path d="M210 360 292 214h36l74 146z" fill="url(#road)"/><path d="M292 360 309 215h5l12 145z" fill="#d3914d" opacity=".45"/>
+<path d="M0 228 C120 190 218 190 296 215" stroke="#363636" stroke-width="3" fill="none"/><path d="M600 225 C482 190 386 190 314 215" stroke="#363636" stroke-width="3" fill="none"/>
+<rect width="600" height="360" filter="url(#grain)" opacity=".35"/></svg>
