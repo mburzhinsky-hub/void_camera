@@ -193,4 +193,4 @@ function saveCapture(){if(!lastObjectUrl)return;const a=document.createElement('
 $('shareButton').onclick=shareCapture;$('saveButton').onclick=saveCapture;
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-0021',{updateViaCache:'none'}).catch(()=>{}));
