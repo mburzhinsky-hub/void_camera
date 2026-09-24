@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-void-sliders-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-sound-1" />
 </head>
 <body>
 <main id="app" class="app">
@@ -242,7 +242,7 @@
         <div class="launch-brand dot-title">VOID</div>
         <p class="mono">CAMERA SYSTEM / 01</p>
       </div>
-      <div class="launch-build mono">BUILD 0.6</div>
+      <div class="launch-build mono">BUILD 0.7</div>
     </header>
 
     <div class="launch-center">
@@ -251,19 +251,28 @@
         <span class="orbit-mark m1"></span><span class="orbit-mark m2"></span><span class="orbit-mark m3"></span><span class="orbit-mark m4"></span>
       </div>
 
-      <button id="startCameraButton" class="launch-button" aria-label="Enter camera">
-        <span class="launch-button-ring">
-          <span class="launch-aperture" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-          </span>
-        </span>
-        <span class="launch-label">
-          <b class="mono">ENTER</b>
-          <small class="mono">CAMERA</small>
-        </span>
-      </button>
+      <div id="launchLever" class="launch-lever" style="--lever-x:0px;--lever-p:0%">
+        <div class="launch-lever-track" aria-hidden="true">
+          <span class="lever-progress"></span>
+          <span class="lever-ticks"></span>
+          <span class="lever-stop"></span>
+        </div>
 
-      <p class="launch-hint mono">TAP TO INITIALISE SENSOR</p>
+        <button id="startCameraButton" class="launch-lever-handle" aria-label="Pull lever to enter camera">
+          <span class="lever-grip" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="lever-handle-copy">
+            <b class="mono">PULL</b>
+            <small class="mono">ARM</small>
+          </span>
+        </button>
+
+        <div class="lever-copy">
+          <b id="launchLeverLabel" class="mono">PULL TO ARM</b>
+          <small class="mono">CAMERA SYSTEM</small>
+        </div>
+      </div>
+
+      <p class="launch-hint mono">SLIDE LEVER RIGHT TO INITIALISE SENSOR</p>
     </div>
 
     <footer class="launch-footer">
@@ -276,6 +285,6 @@
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./app.js?v=20260925-void-sliders-1" defer></script>
+<script src="./app.js?v=20260925-void-sound-1" defer></script>
 </body>
 </html>
