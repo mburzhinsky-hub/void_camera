@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360">
+<defs><linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5e3d28"/><stop offset=".55" stop-color="#a76e3e"/><stop offset="1" stop-color="#d4aa6f"/></linearGradient><radialGradient id="sun"><stop stop-color="#ffe9b0"/><stop offset="1" stop-color="#d28a3f" stop-opacity="0"/></radialGradient></defs>
+<rect width="600" height="360" fill="url(#wall)"/><rect x="312" y="28" width="238" height="218" rx="4" fill="#2c241f"/><rect x="326" y="42" width="96" height="190" fill="#e8be7c"/><rect x="438" y="42" width="96" height="190" fill="#d8a45b"/><rect x="426" y="42" width="8" height="190" fill="#2b211c"/>
+<circle cx="440" cy="125" r="120" fill="url(#sun)" opacity=".8"/><rect x="0" y="275" width="600" height="85" fill="#2f2118"/>
+<g fill="#233425"><rect x="124" y="228" width="16" height="57"/><ellipse cx="102" cy="211" rx="40" ry="18" transform="rotate(-28 102 211)"/><ellipse cx="152" cy="198" rx="46" ry="18" transform="rotate(18 152 198)"/><ellipse cx="92" cy="245" rx="34" ry="14" transform="rotate(20 92 245)"/></g>
+<rect x="70" y="280" width="128" height="38" rx="3" fill="#78513a"/><rect x="78" y="288" width="112" height="22" fill="#b88456"/></svg>
