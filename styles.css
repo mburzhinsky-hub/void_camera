@@ -177,19 +177,16 @@ svg{display:block}
 .preset-tabs::-webkit-scrollbar{display:none}
 .preset-tabs button{border:0;background:transparent;color:#7b7b77;border-radius:999px;padding:7px 12px;font-size:7px}
 .preset-tabs button.active{background:#ececea;color:#080808}
-.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-bottom:80px}
-.preset-card{border-radius:13px;border:1px solid #2a2a2a;overflow:hidden;background:#0b0b0b;text-align:left;padding:0;position:relative}
-.preset-card.active{border:1.5px solid #eee}
-.preset-preview{height:118px;background:var(--bg);position:relative;overflow:hidden}
-.preset-preview:before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(145deg,rgba(255,255,255,.07),transparent 38%),radial-gradient(circle at 72% 18%,rgba(255,255,255,.16),transparent 22%);
-}
-.preset-preview:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.32))}
-.preset-card .heart{position:absolute;right:9px;top:8px;z-index:2;font-size:14px;text-shadow:0 1px 2px #000}
-.preset-copy{padding:8px}
-.preset-copy b{display:block;font-family:"SFMono-Regular",monospace;font-size:9px}
-.preset-copy small{display:block;color:#777;font-size:7px;line-height:1.25;margin-top:3px}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;padding-bottom:74px}
+.preset-card{border-radius:11px;border:1px solid #2a2a2a;overflow:hidden;background:#0a0a0a;text-align:left;padding:0;position:relative;min-width:0}
+.preset-card.active{border:1.5px solid #f1f1ee;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+.preset-preview{height:94px;background-color:#181818;background-image:var(--image),var(--bg);background-size:cover;background-position:center;position:relative;overflow:hidden}
+.preset-preview:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.12));}
+.preset-preview:after{content:"";position:absolute;inset:0;background:var(--look-overlay,transparent);mix-blend-mode:soft-light;opacity:.42}
+.preset-card .heart{position:absolute;right:8px;top:7px;z-index:3;width:24px;height:24px;border:0;background:transparent;color:#fff;font-size:15px;display:grid;place-items:center;padding:0;text-shadow:0 1px 3px #000}
+.preset-copy{padding:7px 8px 8px}
+.preset-copy b{display:block;font-family:"SFMono-Regular",monospace;font-size:8.5px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preset-copy small{display:block;color:#777;font-size:6.5px;line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .apply-preset{
   position:fixed;left:50%;bottom:calc(var(--safeBottom) + 12px);transform:translateX(-50%);
   width:calc(var(--pageW) - 28px);height:54px;border-radius:14px;border:1px solid #d8d8d5;background:#0b0b0b;color:#eee;
@@ -235,3 +232,24 @@ svg{display:block}
   .page{border-left:1px solid #161616;border-right:1px solid #161616}
   .permission-gate{width:520px;left:50%;transform:translateX(-50%)}
 }
+
+.preset-card.favorite .heart{color:#fff}
+.preset-card.favorite .heart::after{content:"♥";position:absolute}
+.preset-card.favorite .heart{font-size:0}
+
+.focus-manual-control{
+  margin-top:9px;border:1px solid #292929;background:#0c0c0c;border-radius:14px;padding:11px;
+}
+.focus-manual-head{display:flex;align-items:center;justify-content:space-between;font-size:8px}
+.focus-manual-head b{font-size:9px}
+.metering-reticle{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);display:none;pointer-events:none}
+.metering-reticle.active{display:block}
+.metering-reticle:before,.metering-reticle:after{content:"";position:absolute;background:rgba(255,255,255,.8)}
+.metering-reticle:before{left:50%;top:0;bottom:0;width:1px}
+.metering-reticle:after{top:50%;left:0;right:0;height:1px}
+.metering-reticle i{position:absolute;inset:7px;border:1px solid rgba(255,255,255,.72);border-radius:50%}
+
+.tool-tile.preview-only:after{
+  content:"WEB";position:absolute;left:7px;top:7px;font:5px "SFMono-Regular",monospace;letter-spacing:.08em;color:#555
+}
+.control-card.preview-control .cap-note{color:#8c8c87}
