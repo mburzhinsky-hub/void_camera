@@ -1,9 +1,9 @@
-const CACHE='void-camera-v20260925-0021';
+const CACHE='void-camera-ref-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-0021',
-  './app.js?v=20260925-0021',
+  './styles.css?v=20260925-void-ref-1',
+  './app.js?v=20260925-void-ref-1',
   './manifest.webmanifest',
   './icon.svg'
 ];
@@ -24,28 +24,24 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
-
   const url = new URL(req.url);
-  const isAppAsset =
+  const fresh =
     url.pathname.endsWith('/') ||
     url.pathname.endsWith('/index.html') ||
     url.pathname.endsWith('/styles.css') ||
     url.pathname.endsWith('/app.js');
 
-  if (isAppAsset) {
+  if (fresh) {
     event.respondWith(
-      fetch(req, { cache: 'no-store' })
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(req, copy)).catch(() => {});
-          return response;
+      fetch(req, {cache:'no-store'})
+        .then(res => {
+          const copy=res.clone();
+          caches.open(CACHE).then(cache=>cache.put(req,copy)).catch(()=>{});
+          return res;
         })
-        .catch(() => caches.match(req))
+        .catch(()=>caches.match(req))
     );
-    return;
+  } else {
+    event.respondWith(caches.match(req).then(hit=>hit||fetch(req)));
   }
-
-  event.respondWith(
-    caches.match(req).then(hit => hit || fetch(req))
-  );
 });
