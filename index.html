@@ -130,7 +130,7 @@
           <div><b class="mono">ISO</b><small>Light Sensitivity</small></div>
           <strong id="isoValue" class="value-pill mono">AUTO</strong>
         </div>
-        <input id="isoSlider" class="pro-range" type="range" min="50" max="1600" step="10" value="100" disabled />
+        <input id="isoSlider" class="pro-range" type="range" min="50" max="1600" step="10" value="100" />
         <div class="range-labels mono"><span>50</span><span>100</span><span>200</span><span>400</span><span>800</span><span>1600</span></div>
         <em id="isoCapability" class="cap-note mono">CHECKING SENSOR</em>
       </article>
@@ -141,7 +141,7 @@
           <div><b class="mono">SHUTTER SPEED</b><small>Motion Control</small></div>
           <strong id="shutterValue" class="value-pill mono">AUTO</strong>
         </div>
-        <input id="shutterSlider" class="pro-range" type="range" min="0" max="6" step="1" value="3" disabled />
+        <input id="shutterSlider" class="pro-range" type="range" min="0" max="6" step="1" value="3" />
         <div class="range-labels mono"><span>1/4000</span><span>1/1000</span><span>1/250</span><span>1/60</span><span>1/15</span><span>1/4</span><span>1s</span></div>
         <em id="shutterCapability" class="cap-note mono">BROWSER CAPABILITY</em>
       </article>
@@ -152,7 +152,7 @@
           <div><b class="mono">WHITE BALANCE</b><small>Colour Temperature</small></div>
           <strong id="wbValue" class="value-pill mono">AUTO</strong>
         </div>
-        <input id="wbSlider" class="pro-range temp-range" type="range" min="2500" max="9000" step="100" value="5200" disabled />
+        <input id="wbSlider" class="pro-range temp-range" type="range" min="2500" max="9000" step="100" value="5200" />
         <div class="range-labels mono"><span>2500K</span><span>4000K</span><span>5200K</span><span>7000K</span><span>9000K</span></div>
         <em id="wbCapability" class="cap-note mono">BROWSER CAPABILITY</em>
       </article>
@@ -195,7 +195,7 @@
         <h1 class="dot-title">FILM PRESETS</h1>
         <p class="mono">TIMELESS COLOURS. MODERN SENSIBILITY.</p>
       </div>
-      <button class="header-text mono">•••</button>
+      <button id="presetMenuButton" class="header-text mono" aria-label="Preset menu">•••</button>
     </header>
 
     <nav id="presetTabs" class="preset-tabs mono">
