@@ -1,9 +1,9 @@
-const CACHE='void-camera-func-20260925-1';
+const CACHE='void-camera-launch-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-func-1',
-  './app.js?v=20260925-void-func-1',
+  './styles.css?v=20260925-void-launch-1',
+  './app.js?v=20260925-void-launch-1',
   './manifest.webmanifest',
   './icon.svg'
 ];
