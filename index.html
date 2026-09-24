@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="VOID" />
   <title>VOID Camera</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
@@ -16,6 +19,16 @@
 <body>
 <main id="app" class="app">
   <section id="cameraPage" class="page camera-page active" aria-label="Camera">
+    <div class="top-controls">
+      <div class="quick-row">
+        <button id="rawQuick" class="quick-pill mono"><span>RAW</span></button>
+        <button id="hdrQuick" class="quick-pill mono"><span>HDR</span></button>
+        <button id="gridQuick" class="quick-pill active" aria-label="Grid"><span class="mini-grid"></span></button>
+        <button id="histQuick" class="quick-pill active" aria-label="Histogram"><span class="mini-hist">▥</span></button>
+        <button id="proButton" class="quick-pill" aria-label="Pro controls"><span class="gear">⚙</span></button>
+      </div>
+    </div>
+
     <div id="finderFrame" class="finder-frame ratio-4-3">
       <video id="cameraVideo" playsinline muted autoplay></video>
       <canvas id="analysisOverlay"></canvas>
@@ -25,8 +38,8 @@
       <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
 
       <div class="capture-meta mono">
-        <b id="qualityReadout">12MP</b>
-        <span id="shutterReadout">AUTO</span>
+        <b id="qualityReadout">12MP RAW</b>
+        <span id="shutterReadout">1/250 · F1.8</span>
         <span id="isoReadout">ISO AUTO</span>
       </div>
 
@@ -44,14 +57,6 @@
     </div>
 
     <div class="camera-shell">
-      <div class="quick-row">
-        <button id="rawQuick" class="quick-pill mono"><span>RAW</span><small>PRO</small></button>
-        <button id="hdrQuick" class="quick-pill mono"><span>HDR</span><small>AUTO</small></button>
-        <button id="gridQuick" class="quick-pill active" aria-label="Grid"><span class="mini-grid"></span></button>
-        <button id="histQuick" class="quick-pill active" aria-label="Histogram"><span class="mini-hist">▥</span></button>
-        <button id="proButton" class="quick-pill" aria-label="Pro controls"><span class="gear">⌾</span></button>
-      </div>
-
       <div class="exposure-ruler">
         <div class="exposure-labels mono"><span>-2</span><span>-1</span><b id="evReadout">0</b><span>+1</span><span>+2</span></div>
         <input id="evSlider" class="ruler-range" type="range" min="-2" max="2" step=".1" value="0" />
@@ -80,7 +85,7 @@
 
   <section id="proPage" class="page sub-page">
     <header class="sub-header">
-      <button class="back-button" data-back>‹</button>
+      <button class="back-button" data-back>←</button>
       <div>
         <h1 class="dot-title">PRO CONTROLS</h1>
         <p class="mono">FULL CONTROL. BETTER PHOTOS.</p>
@@ -118,7 +123,7 @@
           <strong id="shutterValue" class="value-pill mono">AUTO</strong>
         </div>
         <input id="shutterSlider" class="pro-range" type="range" min="0" max="6" step="1" value="3" disabled />
-        <div class="range-labels mono"><span>1/4000</span><span>1/1000</span><span>1/250</span><span>1/60</span><span>1/15</span><span>1s</span></div>
+        <div class="range-labels mono"><span>1/4000</span><span>1/1000</span><span>1/250</span><span>1/60</span><span>1/15</span><span>1/4</span><span>1s</span></div>
         <em id="shutterCapability" class="cap-note mono">BROWSER CAPABILITY</em>
       </article>
 
@@ -155,7 +160,7 @@
 
   <section id="presetsPage" class="page sub-page">
     <header class="sub-header">
-      <button class="back-button" data-back>‹</button>
+      <button class="back-button" data-back>←</button>
       <div>
         <h1 class="dot-title">FILM PRESETS</h1>
         <p class="mono">TIMELESS COLOURS. MODERN SENSIBILITY.</p>
