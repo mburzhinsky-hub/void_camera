@@ -345,3 +345,60 @@ svg{display:block}
   border-left:2px solid #2e2e2e;border-bottom:2px solid #2e2e2e;
   transform:skewX(-22deg);
 }
+
+/* RANGE UX v0.6 */
+.range-ux{position:relative;width:100%;padding-top:18px;margin-top:-8px}
+.range-ux .range-bubble{
+  position:absolute;top:0;left:var(--progress,50%);transform:translate(-50%,-3px) scale(.86);
+  opacity:0;pointer-events:none;background:#efefec;color:#070707;border-radius:999px;
+  min-width:42px;padding:5px 7px;text-align:center;font-size:7px;letter-spacing:.05em;
+  transition:opacity .12s ease,transform .12s ease,left .05s linear;
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
+}
+.range-ux.dragging .range-bubble{opacity:1;transform:translate(-50%,-8px) scale(1)}
+.range-ux.dragging input[type="range"]::-webkit-slider-thumb{transform:scale(1.22)}
+.range-ux.dragging input[type="range"]{filter:brightness(1.16)}
+
+.pro-range{
+  --progress:50%;
+  background:
+    linear-gradient(90deg,#efefec 0 var(--progress),#3b3b3b var(--progress) 100%);
+  height:2px;border-radius:999px;margin:13px 0 8px;
+}
+.pro-range::-webkit-slider-runnable-track{height:2px;background:transparent;border-radius:999px}
+.pro-range::-webkit-slider-thumb{
+  appearance:none;width:16px;height:16px;border-radius:50%;background:#f3f3ef;border:1px solid #5a5a56;
+  margin-top:-7px;box-shadow:0 0 0 5px rgba(255,255,255,.035),0 2px 9px rgba(0,0,0,.4);
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.temp-range{
+  background:
+    linear-gradient(90deg,#72a8ff 0 26%,#f0f0ee 48%,#ffd16d 72%,#f3a13f 100%);
+}
+.ruler-range{
+  --progress:50%;
+  background:
+    linear-gradient(90deg,transparent 0 calc(var(--progress) - 1px),rgba(255,255,255,.24) calc(var(--progress) - 1px) var(--progress),transparent var(--progress)),
+    repeating-linear-gradient(90deg,#3b3b3b 0 1px,transparent 1px 8px);
+}
+.ruler-range::-webkit-slider-runnable-track{background:transparent;border-top:1px solid #242424}
+.ruler-range::-webkit-slider-thumb{transition:transform .12s ease,box-shadow .12s ease;box-shadow:0 0 0 4px rgba(255,255,255,.025)}
+.range-ux.dragging .ruler-range::-webkit-slider-thumb{box-shadow:0 0 0 5px rgba(255,255,255,.09)}
+
+.preset-grid{
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+  padding-bottom:74px;
+}
+.preset-card{
+  border-radius:12px;overflow:hidden;background:#090909;border:1px solid #2b2b2b;
+}
+.preset-preview{height:108px;background:#111;overflow:hidden;position:relative}
+.preset-preview img{
+  width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.015);
+}
+.preset-card.active{border:1.5px solid #f4f4f1}
+.preset-copy{padding:7px 8px 8px}
+.preset-copy b{font-size:8.5px}
+.preset-copy small{font-size:6.5px;color:#7a7a76}
