@@ -12,31 +12,33 @@ let rawEnabled=false,hdrEnabled=false,gridEnabled=true,histEnabled=true,zebraEna
 let currentRatio='4:3', currentZoom=1, currentEV=0, analysisRAF=0;
 let previewISO=100, previewShutter=3, previewWB=5200, focusMode='AF', meteringMode='EVALUATIVE';
 let presetFrameData='';
+const presetThumbCache=new Map();
+let presetThumbGeneration=0;
 let filmEngine=null;
 const mechanicalDials=[];
 const favorites=new Set();
 
 const looks=[
- {name:'VOID CLASSIC',cat:'FILM',desc:'Balanced film colour, soft roll-off',filter:'contrast(1.06) saturate(.88) brightness(1.01) sepia(.05)',thumb:'./assets/presets/classic_city.svg'},
- {name:'NOIR CITY',cat:'CINEMA',desc:'Dark city, deep cinematic toning',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'COLD CINEMA',cat:'CINEMA',desc:'Cool shadows, restrained colour',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
- {name:'CINEMA 25',cat:'CINEMA',desc:'Orange skin, green-grey shadows',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
- {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Cinema contrast tuned for people',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
- {name:'NEON NIGHT',cat:'NIGHT',desc:'Bright neon, deep wet shadows',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
- {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Blue, violet and gold reflections',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
- {name:'AUTO NIGHT',cat:'NIGHT',desc:'Dense blacks, warm practicals',filter:'contrast(1.30) saturate(.92) brightness(.88) sepia(.04)',thumb:'./assets/presets/auto_night.svg'},
- {name:'ICE DAY',cat:'NATURE',desc:'Blue daylight with warm accents',filter:'contrast(1.03) saturate(.90) brightness(1.04) hue-rotate(8deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'CYAN WINTER',cat:'NATURE',desc:'Cyan palette, deep cold shadows',filter:'contrast(1.17) saturate(.68) brightness(.94) hue-rotate(18deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'SNOW DAY',cat:'NATURE',desc:'Clean whites, blue air, warm skin',filter:'contrast(1.06) saturate(.82) brightness(1.08) hue-rotate(7deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'DEEP FOREST',cat:'NATURE',desc:'Green depth, earthy warm accents',filter:'contrast(1.18) saturate(.86) brightness(.93) hue-rotate(-10deg)',thumb:'./assets/presets/forest_mist.svg'},
- {name:'NATURE SOFT',cat:'NATURE',desc:'Natural greens, clean neutrals',filter:'contrast(.96) saturate(.86) brightness(1.03)',thumb:'./assets/presets/forest_mist.svg'},
- {name:'AQUA SUMMER',cat:'NATURE',desc:'Azure water, warm summer light',filter:'contrast(1.02) saturate(1.10) brightness(1.03) hue-rotate(5deg)',thumb:'./assets/presets/water_summer.svg'},
- {name:'PASTEL GLOW',cat:'PEOPLE',desc:'Warm pastel light and soft contrast',filter:'contrast(.88) saturate(.82) brightness(1.08) sepia(.08)',thumb:'./assets/presets/pastel_day.svg'},
- {name:'WARM NATURAL',cat:'PEOPLE',desc:'Natural skin, warm everyday colour',filter:'contrast(.98) saturate(.94) brightness(1.03) sepia(.10)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'AUTUMN GOLD',cat:'NATURE',desc:'Yellow-green autumn haze',filter:'contrast(.98) saturate(1.00) brightness(1.03) sepia(.14) hue-rotate(-8deg)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'CHROME FILM',cat:'FILM',desc:'Yellow-green chrome with violet air',filter:'contrast(1.12) saturate(.90) brightness(.98) sepia(.08) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'FUJI MONO',cat:'B&W',desc:'Fine-grain tonal monochrome',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
- {name:'BLEACH',cat:'B&W',desc:'Silver blacks, restrained colour',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
+ {name:'VOID CLASSIC',cat:'FILM',desc:'Balanced film colour, soft roll-off',use:'EVERYDAY · TRAVEL',filter:'contrast(1.06) saturate(.88) brightness(1.01) sepia(.05)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'NOIR CITY',cat:'CINEMA',desc:'Dark city, deep cinematic toning',use:'CITY · LOW LIGHT',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'COLD CINEMA',cat:'CINEMA',desc:'Cool shadows, restrained colour',use:'ARCHITECTURE · OVERCAST',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
+ {name:'CINEMA 25',cat:'CINEMA',desc:'Orange skin, green-grey shadows',use:'STREET · CINEMATIC',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Cinema contrast tuned for people',use:'PORTRAIT · SKIN',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
+ {name:'NEON NIGHT',cat:'NIGHT',desc:'Bright neon, deep wet shadows',use:'NIGHT · NEON',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Blue, violet and gold reflections',use:'RAIN · REFLECTIONS',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'AUTO NIGHT',cat:'NIGHT',desc:'Dense blacks, warm practicals',use:'CARS · NIGHT',filter:'contrast(1.30) saturate(.92) brightness(.88) sepia(.04)',thumb:'./assets/presets/auto_night.svg'},
+ {name:'ICE DAY',cat:'NATURE',desc:'Blue daylight with warm accents',use:'WINTER · DAYLIGHT',filter:'contrast(1.03) saturate(.90) brightness(1.04) hue-rotate(8deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'CYAN WINTER',cat:'NATURE',desc:'Cyan palette, deep cold shadows',use:'SNOW · BLUE HOUR',filter:'contrast(1.17) saturate(.68) brightness(.94) hue-rotate(18deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'SNOW DAY',cat:'NATURE',desc:'Clean whites, blue air, warm skin',use:'SNOW · PEOPLE',filter:'contrast(1.06) saturate(.82) brightness(1.08) hue-rotate(7deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'DEEP FOREST',cat:'NATURE',desc:'Green depth, earthy warm accents',use:'FOREST · MOODY',filter:'contrast(1.18) saturate(.86) brightness(.93) hue-rotate(-10deg)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'NATURE SOFT',cat:'NATURE',desc:'Natural greens, clean neutrals',use:'NATURE · CLOUDY',filter:'contrast(.96) saturate(.86) brightness(1.03)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'AQUA SUMMER',cat:'NATURE',desc:'Azure water, warm summer light',use:'SEA · SUMMER',filter:'contrast(1.02) saturate(1.10) brightness(1.03) hue-rotate(5deg)',thumb:'./assets/presets/water_summer.svg'},
+ {name:'PASTEL GLOW',cat:'PEOPLE',desc:'Warm pastel light and soft contrast',use:'PORTRAIT · SOFT LIGHT',filter:'contrast(.88) saturate(.82) brightness(1.08) sepia(.08)',thumb:'./assets/presets/pastel_day.svg'},
+ {name:'WARM NATURAL',cat:'PEOPLE',desc:'Natural skin, warm everyday colour',use:'PEOPLE · HOME',filter:'contrast(.98) saturate(.94) brightness(1.03) sepia(.10)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'AUTUMN GOLD',cat:'NATURE',desc:'Yellow-green autumn haze',use:'AUTUMN · GOLDEN HOUR',filter:'contrast(.98) saturate(1.00) brightness(1.03) sepia(.14) hue-rotate(-8deg)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'CHROME FILM',cat:'FILM',desc:'Yellow-green chrome with violet air',use:'STREET · DAYLIGHT',filter:'contrast(1.12) saturate(.90) brightness(.98) sepia(.08) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Fine-grain tonal monochrome',use:'PORTRAIT · STREET',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
+ {name:'BLEACH',cat:'B&W',desc:'Silver blacks, restrained colour',use:'CINEMA · HARD LIGHT',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
 ];
 
 function snapshotPresetFrame(){
@@ -61,7 +63,7 @@ const sound=window.VoidSound;
 function getAudio(){ return sound?.unlock?.(); }
 function showPage(id){
  pages.forEach(p=>p.classList.toggle('active',p.id===id));
- if(id==='presetsPage'){ pendingLook=activeLook; snapshotPresetFrame(); renderPresets(); }
+ if(id==='presetsPage'){ pendingLook=activeLook; snapshotPresetFrame(); renderPresets(); generatePresetThumbs(); }
  tick('soft');
 }
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showPage('cameraPage'));
@@ -101,14 +103,30 @@ function applyLook(){
    video.style.filter=buildPreviewFilter();
  }
 }
+function visibleLooks(){
+ return looks.filter(l=>currentCategory==='ALL'||(currentCategory==='FAV'?favorites.has(l.name):l.cat===currentCategory));
+}
+
 function renderPresets(){
  const grid=$('presetGrid'); grid.innerHTML='';
- looks.filter(l=>currentCategory==='ALL'||(currentCategory==='FAV'?favorites.has(l.name):l.cat===currentCategory)).forEach(l=>{
+ visibleLooks().forEach(l=>{
   const card=document.createElement('article');
+  const liveThumb=presetThumbCache.get(l.name);
   card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
-  card.innerHTML=`<div class="preset-preview" style="background-image:url('${l.thumb}');filter:${l.filter}"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
+  const previewSource=liveThumb||presetFrameData||l.thumb;
+  const previewFilter=liveThumb?'none':(presetFrameData?l.filter:'none');
+  card.innerHTML=`
+    <div class="preset-preview" style="background-image:url('${previewSource}');filter:${previewFilter}">
+      <span class="preset-preview-badge mono">${liveThumb?'LIVE':'PREVIEW'}</span>
+    </div>
+    <button class="heart" type="button" aria-label="Favorite ${safe}">♡</button>
+    <div class="preset-copy">
+      <b>${l.name}</b>
+      <small class="preset-desc">${l.desc}</small>
+      <span class="preset-use mono">BEST · ${l.use}</span>
+    </div>`;
   const choose=()=>{pendingLook=l.name;renderPresets();sound?.preset?.()};
   card.onclick=choose;
   card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
@@ -117,9 +135,29 @@ function renderPresets(){
   grid.appendChild(card);
  });
 }
+
+async function generatePresetThumbs(){
+ if(!filmEngine?.ready || video.readyState<2)return;
+ const generation=++presetThumbGeneration;
+ const restore=activeLook;
+ const targets=visibleLooks();
+ for(const l of targets){
+   if(generation!==presetThumbGeneration)break;
+   const c=document.createElement('canvas');
+   filmEngine.setLook(l.name);
+   filmEngine.setControls({iso:previewISO,shutterIndex:previewShutter,wb:previewWB,ev:currentEV,hdr:hdrEnabled});
+   if(filmEngine.captureTo(c,420)){
+     try{presetThumbCache.set(l.name,c.toDataURL('image/jpeg',.74))}catch{}
+   }
+   if(generation===presetThumbGeneration)renderPresets();
+   await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+ }
+ filmEngine.setLook(restore);
+ applyLook();
+}
 document.querySelectorAll('#presetTabs button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
- b.classList.add('active');currentCategory=b.dataset.category;renderPresets();tick();
+ b.classList.add('active');currentCategory=b.dataset.category;renderPresets();generatePresetThumbs();tick();
 });
 $('presetButton').onclick=()=>showPage('presetsPage');
 $('colorCard').onclick=()=>showPage('presetsPage');
@@ -129,7 +167,7 @@ async function startCamera(){
  try{
   stream?.getTracks().forEach(t=>t.stop());
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facingMode},width:{ideal:1920},height:{ideal:1440}},audio:false});
-  video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];
+  video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];presetThumbCache.clear();
   if(!filmEngine && window.VoidFilmEngine) filmEngine=new window.VoidFilmEngine(video,filmCanvas);
   filmEngine?.start?.();
   gate.classList.add('hidden');analysisCtx.clearRect(0,0,analysisOverlay.width,analysisOverlay.height);analysisOverlay.style.opacity=(zebraEnabled||peakingEnabled)?'1':'0';inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
@@ -621,7 +659,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presets2-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presetlive-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
@@ -629,6 +667,6 @@ if(presetMenu) presetMenu.onclick=()=>{
  if(onlyFav){currentCategory='ALL';showToast('ALL PRESETS')}
  else{currentCategory='FAV';showToast('FAVORITES')}
  document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
- renderPresets();
+ renderPresets();generatePresetThumbs();
  tick('major');
 };
