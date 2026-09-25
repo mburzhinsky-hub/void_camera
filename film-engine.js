@@ -26,6 +26,11 @@
       shadows:-.042,highlights:-.125,shadowTemp:-.070,highlightTemp:.075,
       black:.025,shoulder:.26,fade:.015,skin:.52,grain:.023,grainScale:.98,vignette:.095,halation:.021,mono:0
     },
+    'GOTHAM':{
+      exposure:-.028,contrast:1.215,saturation:.82,vibrance:.045,temp:.018,tint:.008,green:-.004,
+      shadows:-.070,highlights:-.165,shadowTemp:-.055,highlightTemp:.125,
+      black:.040,shoulder:.34,fade:.008,skin:.46,grain:.015,grainScale:1.08,vignette:.090,halation:.046,mono:0
+    },
     'SKIN CINEMA':{
       exposure:.042,contrast:1.045,saturation:.91,vibrance:.040,temp:.048,tint:.015,green:-.004,
       shadows:.040,highlights:-.185,shadowTemp:-.025,highlightTemp:.065,
