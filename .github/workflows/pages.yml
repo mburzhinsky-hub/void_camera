@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -48,7 +48,7 @@ jobs:
           fetch_photo rain-gradient 1482192596544-9eb780fc7f66
           fetch_photo auto-night 1515886657613-9f3515b0c78f
           fetch_photo ice-day 1493246507139-91e8fad9978e
-          fetch_photo cyan-winter 1504198453319-5ce911bafcde
+          fetch_photo cyan-winter 1708577929068-a0da3f14b14e
           fetch_photo snow-day 1464822759023-fed622ff2c3b
           fetch_photo deep-forest 1472396961693-142e6e269027
           fetch_photo nature-soft 1441974231531-c6227db76b6e
@@ -59,6 +59,26 @@ jobs:
           fetch_photo chrome-film 1500534314209-a25ddb2bd429
           fetch_photo fuji-mono 1500648767791-00dcc994a43e
           fetch_photo bleach 1522202176988-66273c2fd55f
+
+          # Never ship a blank card if a source disappears.
+          for fallback in cyan-winter; do
+            if [ ! -s "assets/preset-photos/$fallback.jpg" ]; then
+              cp assets/preset-photos/snow-day.jpg "assets/preset-photos/$fallback.jpg"
+            fi
+          done
+
+      - name: Persist preset photography
+        shell: bash
+        run: |
+          if git status --porcelain assets/preset-photos | grep -q .; then
+            git config user.name "VOID Camera Bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add assets/preset-photos
+            git commit -m "chore: persist preset reference photography [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "Preset photography already committed."
+          fi
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
