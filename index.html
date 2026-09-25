@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-void-presetlive-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-void-presetguide-1" />
 </head>
 <body>
 <main id="app" class="app">
@@ -211,6 +211,24 @@
 
     <div id="presetGrid" class="preset-grid"></div>
 
+    <section id="presetDetail" class="preset-detail" aria-hidden="true">
+      <button id="presetDetailClose" class="preset-detail-close" aria-label="Close preset">×</button>
+      <div id="presetDetailImage" class="preset-detail-image"></div>
+      <div class="preset-detail-body">
+        <div class="preset-detail-meta">
+          <span id="presetDetailCategory" class="mono"></span>
+          <span id="presetDetailUse" class="mono"></span>
+        </div>
+        <h2 id="presetDetailName" class="dot-title"></h2>
+        <p id="presetDetailDesc" class="preset-detail-desc"></p>
+        <div class="preset-tip">
+          <small class="mono">SHOOTING NOTE</small>
+          <p id="presetDetailTip"></p>
+        </div>
+        <button id="presetDetailUseButton" class="preset-detail-use mono">USE THIS PRESET</button>
+      </div>
+    </section>
+
     <button id="applyPresetButton" class="apply-preset mono">
       <svg viewBox="0 0 24 24"><path d="M4 7h16M7 4v6M4 17h16M17 14v6M4 12h16M12 9v6"/></svg>
       <span>APPLY PRESET</span>
@@ -245,7 +263,7 @@
         <div class="launch-brand dot-title">VOID</div>
         <p class="mono">CAMERA SYSTEM / 01</p>
       </div>
-      <div class="launch-build mono">BUILD 1.2</div>
+      <div class="launch-build mono">BUILD 1.3</div>
     </header>
 
     <div class="launch-center">
@@ -288,9 +306,9 @@
   <canvas id="analysisBuffer" width="160" height="120" hidden></canvas>
   <div id="toast" class="toast mono"></div>
 </main>
-<script src="./sound-engine.js?v=20260925-void-presetlive-1" defer></script>
-<script src="./mechanical-dial.js?v=20260925-void-presetlive-1" defer></script>
-<script src="./film-engine.js?v=20260925-void-presetlive-1" defer></script>
-<script src="./app.js?v=20260925-void-presetlive-1" defer></script>
+<script src="./sound-engine.js?v=20260925-void-presetguide-1" defer></script>
+<script src="./mechanical-dial.js?v=20260925-void-presetguide-1" defer></script>
+<script src="./film-engine.js?v=20260925-void-presetguide-1" defer></script>
+<script src="./app.js?v=20260925-void-presetguide-1" defer></script>
 </body>
 </html>
