@@ -6,7 +6,7 @@ const histCanvas=$('histogramCanvas'), histCtx=histCanvas.getContext('2d');
 const analysisBuffer=$('analysisBuffer'), bufferCtx=analysisBuffer.getContext('2d',{willReadFrequently:true});
 
 let stream=null, track=null, facingMode='environment';
-let activeLook='FUJI CLASSIC', pendingLook='FUJI CLASSIC', currentCategory='ALL';
+let activeLook='VOID CLASSIC', pendingLook='VOID CLASSIC', currentCategory='ALL';
 let capturedBlob=null, originalBlob=null, lastObjectUrl=null, lastTickStep=null;
 let rawEnabled=false,hdrEnabled=false,gridEnabled=true,histEnabled=true,zebraEnabled=false,peakingEnabled=false,stabEnabled=false;
 let currentRatio='4:3', currentZoom=1, currentEV=0, analysisRAF=0;
@@ -17,16 +17,26 @@ const mechanicalDials=[];
 const favorites=new Set();
 
 const looks=[
- {name:'FUJI CLASSIC',cat:'FUJI',desc:'Muted documentary colour',filter:'contrast(1.12) saturate(.78) brightness(.98) sepia(.05) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'FUJI SOFT',cat:'FUJI',desc:'Pastel skin, lifted shadows',filter:'contrast(.86) saturate(.76) brightness(1.08) sepia(.05) hue-rotate(-2deg)',thumb:'./assets/presets/soft_blossom.svg'},
- {name:'FUJI STREET',cat:'FUJI',desc:'Dense blacks, urban colour',filter:'contrast(1.28) saturate(1.14) brightness(.95) hue-rotate(-8deg)',thumb:'./assets/presets/street_urban.svg'},
- {name:'FUJI WARM',cat:'FUJI',desc:'Amber highlights, soft greens',filter:'contrast(1.02) saturate(1.08) sepia(.24) brightness(1.01) hue-rotate(-7deg)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'FUJI COOL',cat:'FUJI',desc:'Clean cyan, crisp daylight',filter:'contrast(1.09) saturate(.88) brightness(1.00) hue-rotate(12deg)',thumb:'./assets/presets/cool_bridge.svg'},
+ {name:'VOID CLASSIC',cat:'FILM',desc:'Balanced film colour, soft roll-off',filter:'contrast(1.06) saturate(.88) brightness(1.01) sepia(.05)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'NOIR CITY',cat:'CINEMA',desc:'Dark city, deep cinematic toning',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'COLD CINEMA',cat:'CINEMA',desc:'Cool shadows, restrained colour',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
+ {name:'CINEMA 25',cat:'CINEMA',desc:'Orange skin, green-grey shadows',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Cinema contrast tuned for people',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
+ {name:'NEON NIGHT',cat:'NIGHT',desc:'Bright neon, deep wet shadows',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Blue, violet and gold reflections',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'AUTO NIGHT',cat:'NIGHT',desc:'Dense blacks, warm practicals',filter:'contrast(1.30) saturate(.92) brightness(.88) sepia(.04)',thumb:'./assets/presets/auto_night.svg'},
+ {name:'ICE DAY',cat:'NATURE',desc:'Blue daylight with warm accents',filter:'contrast(1.03) saturate(.90) brightness(1.04) hue-rotate(8deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'CYAN WINTER',cat:'NATURE',desc:'Cyan palette, deep cold shadows',filter:'contrast(1.17) saturate(.68) brightness(.94) hue-rotate(18deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'SNOW DAY',cat:'NATURE',desc:'Clean whites, blue air, warm skin',filter:'contrast(1.06) saturate(.82) brightness(1.08) hue-rotate(7deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'DEEP FOREST',cat:'NATURE',desc:'Green depth, earthy warm accents',filter:'contrast(1.18) saturate(.86) brightness(.93) hue-rotate(-10deg)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'NATURE SOFT',cat:'NATURE',desc:'Natural greens, clean neutrals',filter:'contrast(.96) saturate(.86) brightness(1.03)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'AQUA SUMMER',cat:'NATURE',desc:'Azure water, warm summer light',filter:'contrast(1.02) saturate(1.10) brightness(1.03) hue-rotate(5deg)',thumb:'./assets/presets/water_summer.svg'},
+ {name:'PASTEL GLOW',cat:'PEOPLE',desc:'Warm pastel light and soft contrast',filter:'contrast(.88) saturate(.82) brightness(1.08) sepia(.08)',thumb:'./assets/presets/pastel_day.svg'},
+ {name:'WARM NATURAL',cat:'PEOPLE',desc:'Natural skin, warm everyday colour',filter:'contrast(.98) saturate(.94) brightness(1.03) sepia(.10)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'AUTUMN GOLD',cat:'NATURE',desc:'Yellow-green autumn haze',filter:'contrast(.98) saturate(1.00) brightness(1.03) sepia(.14) hue-rotate(-8deg)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'CHROME FILM',cat:'FILM',desc:'Yellow-green chrome with violet air',filter:'contrast(1.12) saturate(.90) brightness(.98) sepia(.08) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
  {name:'FUJI MONO',cat:'B&W',desc:'Fine-grain tonal monochrome',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
- {name:'PORTRAIT 400',cat:'MODERN',desc:'Warm skin, gentle roll-off',filter:'contrast(.92) saturate(.92) brightness(1.05) sepia(.10) hue-rotate(-3deg)',thumb:'./assets/presets/portrait_400.svg'},
- {name:'DAYLIGHT 250',cat:'CINEMA',desc:'Soft highlight cinema stock',filter:'contrast(.94) saturate(.84) brightness(1.02) sepia(.08) hue-rotate(-4deg)',thumb:'./assets/presets/daylight_250.svg'},
- {name:'TUNGSTEN 500',cat:'CINEMA',desc:'Cyan shadows, hot practicals',filter:'contrast(1.16) saturate(1.02) brightness(.93) hue-rotate(15deg)',thumb:'./assets/presets/tungsten_500.svg'},
- {name:'BLEACH',cat:'CINEMA',desc:'Silver blacks, restrained colour',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
+ {name:'BLEACH',cat:'B&W',desc:'Silver blacks, restrained colour',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
 ];
 
 function snapshotPresetFrame(){
@@ -611,7 +621,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-artifactfix-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presets2-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
