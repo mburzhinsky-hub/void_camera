@@ -934,3 +934,44 @@ svg{display:block}
   text-overflow:ellipsis;
 }
 .preset-card.active .preset-use{color:#efefec}
+
+/* PRESET GUIDE / BUILD 1.3 */
+.preset-preview-badge{display:none!important}
+.preset-detail{
+  position:fixed;z-index:35;
+  inset:0;
+  width:var(--pageW);
+  max-width:100%;
+  margin:auto;
+  background:#050505;
+  transform:translateY(105%);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  overflow-y:auto;
+  padding-bottom:calc(var(--safeBottom) + 24px);
+}
+.preset-detail.open{transform:translateY(0)}
+.preset-detail-close{
+  position:fixed;z-index:37;top:calc(var(--safeTop) + 12px);right:max(calc((100vw - var(--pageW))/2 + 14px),14px);
+  width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+  background:rgba(5,5,5,.72);backdrop-filter:blur(12px);color:#eee;font-size:24px;
+}
+.preset-detail-image{
+  width:100%;height:42dvh;min-height:280px;max-height:480px;
+  background-size:cover;background-position:center;
+  border-bottom:1px solid #202020;
+}
+.preset-detail-body{padding:18px 16px 20px}
+.preset-detail-meta{display:flex;justify-content:space-between;gap:10px;color:#777;font-size:7px;margin-bottom:12px}
+.preset-detail-body h2{font-size:34px;margin:0 0 10px}
+.preset-detail-desc{margin:0;color:#aaa;line-height:1.45;font-size:14px}
+.preset-tip{
+  margin-top:18px;padding:14px;border:1px solid #292929;border-radius:14px;background:#0b0b0b
+}
+.preset-tip small{font-size:7px;color:#6f6f6b}
+.preset-tip p{margin:7px 0 0;font-size:13px;line-height:1.5;color:#d3d3cf}
+.preset-detail-use{
+  width:100%;height:54px;margin-top:16px;border-radius:14px;border:1px solid #e7e7e3;
+  background:#efefec;color:#090909;font-size:9px;font-weight:700;letter-spacing:.12em
+}
+.preset-detail-use:active{transform:scale(.985)}
+.presets-page .apply-preset{display:none}
