@@ -1,12 +1,12 @@
-const CACHE='void-camera-artifactfix-20260925-1';
+const CACHE='void-camera-presets2-20260925-1';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-artifactfix-1',
-  './sound-engine.js?v=20260925-void-artifactfix-1',
-  './mechanical-dial.js?v=20260925-void-artifactfix-1',
-  './film-engine.js?v=20260925-void-artifactfix-1',
-  './app.js?v=20260925-void-artifactfix-1',
+  './styles.css?v=20260925-void-presets2-1',
+  './sound-engine.js?v=20260925-void-presets2-1',
+  './mechanical-dial.js?v=20260925-void-presets2-1',
+  './film-engine.js?v=20260925-void-presets2-1',
+  './app.js?v=20260925-void-presets2-1',
   './manifest.webmanifest',
   './icon.svg',
   './assets/presets/classic_city.svg',
