@@ -44,6 +44,10 @@
       src.buffer=b;hp.type='highpass';hp.frequency.value=highpass;lp.type='lowpass';lp.frequency.value=lowpass;g.gain.value=gain;
       src.connect(hp).connect(lp).connect(g).connect(this.master);src.start(now+start);
     }
+    soft(){ if(!this.allow('soft',48))return; this.noise(0,.008,.006,2800);this.tone(1100,0,.016,.008,'triangle',920); }
+    detent(){ this.iso(false); }
+    majorDetent(){ this.iso(true); }
+    cameraFlip(){ this.flip(); }
     iso(major=false){
       if(!this.allow('iso',54))return;
       if(major){this.noise(0,.013,.013,1800);this.tone(430,0,.037,.023,'triangle',360);this.tone(1350,.012,.018,.009,'square',1040)}
