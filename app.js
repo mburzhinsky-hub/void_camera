@@ -14,6 +14,35 @@ let previewISO=100, previewShutter=3, previewWB=5200, focusMode='AF', meteringMo
 let presetFrameData='';
 const presetThumbCache=new Map();
 let presetThumbGeneration=0;
+const presetPhotoMap={
+ 'VOID CLASSIC':'void-classic','NOIR CITY':'noir-city','COLD CINEMA':'cold-cinema','CINEMA 25':'cinema-25',
+ 'SKIN CINEMA':'skin-cinema','NEON NIGHT':'neon-night','RAIN GRADIENT':'rain-gradient','AUTO NIGHT':'auto-night',
+ 'ICE DAY':'ice-day','CYAN WINTER':'cyan-winter','SNOW DAY':'snow-day','DEEP FOREST':'deep-forest',
+ 'NATURE SOFT':'nature-soft','AQUA SUMMER':'aqua-summer','PASTEL GLOW':'pastel-glow','WARM NATURAL':'warm-natural',
+ 'AUTUMN GOLD':'autumn-gold','CHROME FILM':'chrome-film','FUJI MONO':'fuji-mono','BLEACH':'bleach'
+};
+const presetTips={
+ 'VOID CLASSIC':'Use in neutral daylight when you want one reliable film look without pushing skin or skies too far.',
+ 'NOIR CITY':'Best after sunset or in dim interiors. Protect highlights and let the shadows stay deep.',
+ 'COLD CINEMA':'Works well with concrete, glass, overcast streets and cool architecture. Avoid very warm tungsten rooms.',
+ 'CINEMA 25':'Strongest with street scenes, mixed daylight and people in frame. Keep exposure slightly under for richer colour.',
+ 'SKIN CINEMA':'Designed for faces. Keep white balance close to neutral and avoid clipping highlights on skin.',
+ 'NEON NIGHT':'Use with signs, LEDs and wet streets. Slight underexposure keeps neon colour from washing out.',
+ 'RAIN GRADIENT':'Best in rain, reflections and mixed city light where blue, violet and amber can separate.',
+ 'AUTO NIGHT':'Built for cars and practical lights at night. Let blacks stay black and expose for headlights.',
+ 'ICE DAY':'Cold daylight with a clean blue cast. Good for winter streets, pale architecture and bright skies.',
+ 'CYAN WINTER':'Use in snow, blue hour and cold shade. Avoid scenes that already have heavy cyan contamination.',
+ 'SNOW DAY':'Made for bright snow with people in frame. Add a little exposure if faces look too dark.',
+ 'DEEP FOREST':'For dense greens, damp ground and moody woodland. Works best away from harsh midday sun.',
+ 'NATURE SOFT':'A gentle default for parks, countryside and cloudy nature scenes with restrained contrast.',
+ 'AQUA SUMMER':'For sea, pools and bright summer skies. Works best in clean daylight, not heavy tungsten light.',
+ 'PASTEL GLOW':'For soft portraits, flowers and low-contrast daylight. Avoid already-flat scenes.',
+ 'WARM NATURAL':'For people, interiors and everyday warm light. Keep WB near neutral to avoid orange skin.',
+ 'AUTUMN GOLD':'For leaves, golden hour and earthy scenes. Strongest when yellow-green tones are already present.',
+ 'CHROME FILM':'For daylight street, metal, concrete and travel. Good when you want colour with a slightly strange film bias.',
+ 'FUJI MONO':'For portraits and street with clear shape and light. Works best when the scene already has strong tonal separation.',
+ 'BLEACH':'For hard light, architecture and cinematic subjects. Avoid delicate skin tones unless you want a severe look.'
+};
 let filmEngine=null;
 const mechanicalDials=[];
 const favorites=new Set();
@@ -63,7 +92,7 @@ const sound=window.VoidSound;
 function getAudio(){ return sound?.unlock?.(); }
 function showPage(id){
  pages.forEach(p=>p.classList.toggle('active',p.id===id));
- if(id==='presetsPage'){ pendingLook=activeLook; snapshotPresetFrame(); renderPresets(); generatePresetThumbs(); }
+ if(id==='presetsPage'){ pendingLook=activeLook; renderPresets(); closePresetDetail(); }
  tick('soft');
 }
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showPage('cameraPage'));
@@ -106,68 +135,71 @@ function applyLook(){
 function visibleLooks(){
  return looks.filter(l=>currentCategory==='ALL'||(currentCategory==='FAV'?favorites.has(l.name):l.cat===currentCategory));
 }
-
+function presetPhotoPath(l){
+ const slug=presetPhotoMap[l.name];
+ return slug?'./assets/preset-photos/'+slug+'.jpg':l.thumb;
+}
 function renderPresets(){
  const grid=$('presetGrid'); grid.innerHTML='';
  visibleLooks().forEach(l=>{
   const card=document.createElement('article');
-  const liveThumb=presetThumbCache.get(l.name);
-  card.className='preset-card'+(l.name===pendingLook?' active':'')+(favorites.has(l.name)?' favorite':'');
+  card.className='preset-card'+(l.name===activeLook?' active':'')+(favorites.has(l.name)?' favorite':'');
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
-  const previewSource=liveThumb||presetFrameData||l.thumb;
-  const previewFilter=liveThumb?'none':(presetFrameData?l.filter:'none');
   card.innerHTML=`
-    <div class="preset-preview" style="background-image:url('${previewSource}');filter:${previewFilter}">
-      <span class="preset-preview-badge mono">${liveThumb?'LIVE':'PREVIEW'}</span>
-    </div>
+    <div class="preset-preview" style="background-image:url('${presetPhotoPath(l)}')"></div>
     <button class="heart" type="button" aria-label="Favorite ${safe}">♡</button>
     <div class="preset-copy">
       <b>${l.name}</b>
       <small class="preset-desc">${l.desc}</small>
       <span class="preset-use mono">BEST · ${l.use}</span>
     </div>`;
-  const choose=()=>{pendingLook=l.name;renderPresets();sound?.preset?.()};
-  card.onclick=choose;
-  card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
+  const open=()=>openPresetDetail(l);
+  card.onclick=open;
+  card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
   const heart=card.querySelector('.heart');
   heart.onclick=e=>{e.stopPropagation();favorites.has(l.name)?favorites.delete(l.name):favorites.add(l.name);renderPresets();tick()};
   grid.appendChild(card);
  });
 }
-
-async function generatePresetThumbs(){
- if(!filmEngine?.ready || video.readyState<2)return;
- const generation=++presetThumbGeneration;
- const restore=activeLook;
- const targets=visibleLooks();
- for(const l of targets){
-   if(generation!==presetThumbGeneration)break;
-   const c=document.createElement('canvas');
-   filmEngine.setLook(l.name);
-   filmEngine.setControls({iso:previewISO,shutterIndex:previewShutter,wb:previewWB,ev:currentEV,hdr:hdrEnabled});
-   if(filmEngine.captureTo(c,420)){
-     try{presetThumbCache.set(l.name,c.toDataURL('image/jpeg',.74))}catch{}
-   }
-   if(generation===presetThumbGeneration)renderPresets();
-   await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
- }
- filmEngine.setLook(restore);
- applyLook();
+function openPresetDetail(l){
+ pendingLook=l.name;
+ const panel=$('presetDetail');
+ $('presetDetailImage').style.backgroundImage=`url('${presetPhotoPath(l)}')`;
+ $('presetDetailName').textContent=l.name;
+ $('presetDetailDesc').textContent=l.desc;
+ $('presetDetailUse').textContent='BEST FOR · '+l.use;
+ $('presetDetailTip').textContent=presetTips[l.name]||'Use this look when its colour and contrast suit the scene.';
+ $('presetDetailCategory').textContent=l.cat;
+ panel.classList.add('open');
+ sound?.preset?.();
+}
+function closePresetDetail(){
+ $('presetDetail')?.classList.remove('open');
 }
 document.querySelectorAll('#presetTabs button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
- b.classList.add('active');currentCategory=b.dataset.category;renderPresets();generatePresetThumbs();tick();
+ b.classList.add('active');currentCategory=b.dataset.category;renderPresets();closePresetDetail();tick();
 });
 $('presetButton').onclick=()=>showPage('presetsPage');
 $('colorCard').onclick=()=>showPage('presetsPage');
 $('applyPresetButton').onclick=()=>{activeLook=pendingLook;applyLook();sound.preset();showPage('cameraPage');showToast(activeLook+' APPLIED')};
+$('presetDetailClose').onclick=closePresetDetail;
+$('presetDetailUseButton').onclick=()=>{
+ activeLook=pendingLook;
+ applyLook();
+ sound.preset();
+ closePresetDetail();
+ renderPresets();
+ showPage('cameraPage');
+ showToast(activeLook+' APPLIED');
+};
 
 async function startCamera(){
  try{
   stream?.getTracks().forEach(t=>t.stop());
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facingMode},width:{ideal:1920},height:{ideal:1440}},audio:false});
-  video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];presetThumbCache.clear();
+  video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];
   if(!filmEngine && window.VoidFilmEngine) filmEngine=new window.VoidFilmEngine(video,filmCanvas);
   filmEngine?.start?.();
   gate.classList.add('hidden');analysisCtx.clearRect(0,0,analysisOverlay.width,analysisOverlay.height);analysisOverlay.style.opacity=(zebraEnabled||peakingEnabled)?'1':'0';inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
@@ -659,7 +691,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presetlive-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presetguide-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
@@ -667,6 +699,6 @@ if(presetMenu) presetMenu.onclick=()=>{
  if(onlyFav){currentCategory='ALL';showToast('ALL PRESETS')}
  else{currentCategory='FAV';showToast('FAVORITES')}
  document.querySelectorAll('#presetTabs button').forEach(x=>x.classList.remove('active'));
- renderPresets();generatePresetThumbs();
+ renderPresets();closePresetDetail();
  tick('major');
 };
