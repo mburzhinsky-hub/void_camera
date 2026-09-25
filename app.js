@@ -15,59 +15,59 @@ let presetFrameData='';
 const presetThumbCache=new Map();
 let presetThumbGeneration=0;
 const presetPhotoMap={
- 'VOID CLASSIC':'void-classic','NOIR CITY':'noir-city','COLD CINEMA':'cold-cinema','CINEMA 25':'cinema-25',
- 'SKIN CINEMA':'skin-cinema','NEON NIGHT':'neon-night','RAIN GRADIENT':'rain-gradient','AUTO NIGHT':'auto-night',
- 'ICE DAY':'ice-day','CYAN WINTER':'cyan-winter','SNOW DAY':'snow-day','DEEP FOREST':'deep-forest',
- 'NATURE SOFT':'nature-soft','AQUA SUMMER':'aqua-summer','PASTEL GLOW':'pastel-glow','WARM NATURAL':'warm-natural',
- 'AUTUMN GOLD':'autumn-gold','CHROME FILM':'chrome-film','FUJI MONO':'fuji-mono','BLEACH':'bleach'
+ 'VOID CLASSIC':'Use as the neutral house look. Expose normally; it protects highlights without making shadows flat.','NOIR CITY':'noir-city','COLD CINEMA':'cold-cinema','CINEMA 25':'cinema-25',
+ 'SKIN CINEMA':'Prioritise the face. Keep WB close to neutral and avoid clipping cheeks or forehead highlights.','NEON NIGHT':'neon-night','RAIN GRADIENT':'rain-gradient','AUTO NIGHT':'auto-night',
+ 'ICE DAY':'Works in bright cold daylight. Add a little exposure only if snow starts looking grey.','CYAN WINTER':'cyan-winter','SNOW DAY':'snow-day','DEEP FOREST':'deep-forest',
+ 'NATURE SOFT':'Use when the scene already has strong texture. It opens shadows and reduces highlight bite.','AQUA SUMMER':'aqua-summer','PASTEL GLOW':'pastel-glow','WARM NATURAL':'warm-natural',
+ 'AUTUMN GOLD':'Best with existing yellow-green foliage or late sun. Avoid scenes already dominated by orange light.','CHROME FILM':'chrome-film','FUJI MONO':'fuji-mono','BLEACH':'bleach'
 };
 const presetTips={
  'VOID CLASSIC':'Use in neutral daylight when you want one reliable film look without pushing skin or skies too far.',
- 'NOIR CITY':'Best after sunset or in dim interiors. Protect highlights and let the shadows stay deep.',
- 'COLD CINEMA':'Works well with concrete, glass, overcast streets and cool architecture. Avoid very warm tungsten rooms.',
- 'CINEMA 25':'Strongest with street scenes, mixed daylight and people in frame. Keep exposure slightly under for richer colour.',
+ 'NOIR CITY':'Underexpose slightly. Let street lamps and windows stay bright while the blacks remain dense.',
+ 'COLD CINEMA':'Keep white balance neutral. Best on concrete, glass and grey skies where cool shadows can separate cleanly.',
+ 'CINEMA 25':'Expose a touch low. It is built for mixed daylight and skin, with warmer highlights against greener shadows.',
  'SKIN CINEMA':'Designed for faces. Keep white balance close to neutral and avoid clipping highlights on skin.',
- 'NEON NIGHT':'Use with signs, LEDs and wet streets. Slight underexposure keeps neon colour from washing out.',
- 'RAIN GRADIENT':'Best in rain, reflections and mixed city light where blue, violet and amber can separate.',
- 'AUTO NIGHT':'Built for cars and practical lights at night. Let blacks stay black and expose for headlights.',
+ 'NEON NIGHT':'Expose for the signs, not the shadows. The profile is designed to keep saturated neon from turning white.',
+ 'RAIN GRADIENT':'Use after rain or around reflective surfaces. Blue-violet shadows and warm reflections are the point of the look.',
+ 'AUTO NIGHT':'Meter for headlights and practicals. Cars and glossy surfaces benefit from the harder black point and halation.',
  'ICE DAY':'Cold daylight with a clean blue cast. Good for winter streets, pale architecture and bright skies.',
- 'CYAN WINTER':'Use in snow, blue hour and cold shade. Avoid scenes that already have heavy cyan contamination.',
- 'SNOW DAY':'Made for bright snow with people in frame. Add a little exposure if faces look too dark.',
- 'DEEP FOREST':'For dense greens, damp ground and moody woodland. Works best away from harsh midday sun.',
+ 'CYAN WINTER':'Best in shade or blue hour. Avoid already-cyan scenes unless you want an intentionally icy result.',
+ 'SNOW DAY':'Designed to keep snow bright while protecting skin. Slight positive exposure compensation often helps.',
+ 'DEEP FOREST':'Use under canopy or overcast light. The profile deepens green shadows and keeps warm earth from going muddy.',
  'NATURE SOFT':'A gentle default for parks, countryside and cloudy nature scenes with restrained contrast.',
- 'AQUA SUMMER':'For sea, pools and bright summer skies. Works best in clean daylight, not heavy tungsten light.',
- 'PASTEL GLOW':'For soft portraits, flowers and low-contrast daylight. Avoid already-flat scenes.',
- 'WARM NATURAL':'For people, interiors and everyday warm light. Keep WB near neutral to avoid orange skin.',
+ 'AQUA SUMMER':'Use in direct clean daylight. Water and sky get extra separation while skin is protected from oversaturation.',
+ 'PASTEL GLOW':'Best with soft light and low contrast. Avoid harsh noon sun, where the lifted curve can look too flat.',
+ 'WARM NATURAL':'Use indoors or with people in warm daylight. Keep WB neutral so skin stays warm rather than orange.',
  'AUTUMN GOLD':'For leaves, golden hour and earthy scenes. Strongest when yellow-green tones are already present.',
- 'CHROME FILM':'For daylight street, metal, concrete and travel. Good when you want colour with a slightly strange film bias.',
- 'FUJI MONO':'For portraits and street with clear shape and light. Works best when the scene already has strong tonal separation.',
- 'BLEACH':'For hard light, architecture and cinematic subjects. Avoid delicate skin tones unless you want a severe look.'
+ 'CHROME FILM':'Good for travel and street in daylight. The look is intentionally slightly strange: cool shadows, muted chrome-like colour.',
+ 'FUJI MONO':'Look for directional light and clear shape. The grain and mid-tone contrast work best when the scene already has structure.',
+ 'BLEACH':'Use on architecture, hard light and graphic subjects. It intentionally sacrifices colour for silver density and punch.'
 };
 let filmEngine=null;
 const mechanicalDials=[];
 const favorites=new Set();
 
 const looks=[
- {name:'VOID CLASSIC',cat:'FILM',desc:'Balanced film colour, soft roll-off',use:'EVERYDAY · TRAVEL',filter:'contrast(1.06) saturate(.88) brightness(1.01) sepia(.05)',thumb:'./assets/presets/classic_city.svg'},
- {name:'NOIR CITY',cat:'CINEMA',desc:'Dark city, deep cinematic toning',use:'CITY · LOW LIGHT',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'COLD CINEMA',cat:'CINEMA',desc:'Cool shadows, restrained colour',use:'ARCHITECTURE · OVERCAST',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
- {name:'CINEMA 25',cat:'CINEMA',desc:'Orange skin, green-grey shadows',use:'STREET · CINEMATIC',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
- {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Cinema contrast tuned for people',use:'PORTRAIT · SKIN',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
- {name:'NEON NIGHT',cat:'NIGHT',desc:'Bright neon, deep wet shadows',use:'NIGHT · NEON',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
- {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Blue, violet and gold reflections',use:'RAIN · REFLECTIONS',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
- {name:'AUTO NIGHT',cat:'NIGHT',desc:'Dense blacks, warm practicals',use:'CARS · NIGHT',filter:'contrast(1.30) saturate(.92) brightness(.88) sepia(.04)',thumb:'./assets/presets/auto_night.svg'},
- {name:'ICE DAY',cat:'NATURE',desc:'Blue daylight with warm accents',use:'WINTER · DAYLIGHT',filter:'contrast(1.03) saturate(.90) brightness(1.04) hue-rotate(8deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'CYAN WINTER',cat:'NATURE',desc:'Cyan palette, deep cold shadows',use:'SNOW · BLUE HOUR',filter:'contrast(1.17) saturate(.68) brightness(.94) hue-rotate(18deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'SNOW DAY',cat:'NATURE',desc:'Clean whites, blue air, warm skin',use:'SNOW · PEOPLE',filter:'contrast(1.06) saturate(.82) brightness(1.08) hue-rotate(7deg)',thumb:'./assets/presets/snow_street.svg'},
- {name:'DEEP FOREST',cat:'NATURE',desc:'Green depth, earthy warm accents',use:'FOREST · MOODY',filter:'contrast(1.18) saturate(.86) brightness(.93) hue-rotate(-10deg)',thumb:'./assets/presets/forest_mist.svg'},
- {name:'NATURE SOFT',cat:'NATURE',desc:'Natural greens, clean neutrals',use:'NATURE · CLOUDY',filter:'contrast(.96) saturate(.86) brightness(1.03)',thumb:'./assets/presets/forest_mist.svg'},
- {name:'AQUA SUMMER',cat:'NATURE',desc:'Azure water, warm summer light',use:'SEA · SUMMER',filter:'contrast(1.02) saturate(1.10) brightness(1.03) hue-rotate(5deg)',thumb:'./assets/presets/water_summer.svg'},
- {name:'PASTEL GLOW',cat:'PEOPLE',desc:'Warm pastel light and soft contrast',use:'PORTRAIT · SOFT LIGHT',filter:'contrast(.88) saturate(.82) brightness(1.08) sepia(.08)',thumb:'./assets/presets/pastel_day.svg'},
- {name:'WARM NATURAL',cat:'PEOPLE',desc:'Natural skin, warm everyday colour',use:'PEOPLE · HOME',filter:'contrast(.98) saturate(.94) brightness(1.03) sepia(.10)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'AUTUMN GOLD',cat:'NATURE',desc:'Yellow-green autumn haze',use:'AUTUMN · GOLDEN HOUR',filter:'contrast(.98) saturate(1.00) brightness(1.03) sepia(.14) hue-rotate(-8deg)',thumb:'./assets/presets/warm_interior.svg'},
- {name:'CHROME FILM',cat:'FILM',desc:'Yellow-green chrome with violet air',use:'STREET · DAYLIGHT',filter:'contrast(1.12) saturate(.90) brightness(.98) sepia(.08) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
- {name:'FUJI MONO',cat:'B&W',desc:'Fine-grain tonal monochrome',use:'PORTRAIT · STREET',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
- {name:'BLEACH',cat:'B&W',desc:'Silver blacks, restrained colour',use:'CINEMA · HARD LIGHT',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
+ {name:'VOID CLASSIC',cat:'FILM',desc:'Balanced film colour with soft highlights',use:'EVERYDAY · TRAVEL',filter:'contrast(1.06) saturate(.88) brightness(1.01) sepia(.05)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'NOIR CITY',cat:'CINEMA',desc:'Dense shadows, muted colour, warm lamps',use:'CITY · LOW LIGHT',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'COLD CINEMA',cat:'CINEMA',desc:'Steel-blue shadows with neutral highlights',use:'ARCHITECTURE · OVERCAST',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
+ {name:'CINEMA 25',cat:'CINEMA',desc:'Green-grey shadows, warm skin and firm blacks',use:'STREET · CINEMATIC',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Protected skin, soft shoulder, restrained contrast',use:'PORTRAIT · SKIN',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
+ {name:'NEON NIGHT',cat:'NIGHT',desc:'Magenta-cyan neon with deep wet blacks',use:'NIGHT · NEON',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Cool shadows, violet mids, warm reflections',use:'RAIN · REFLECTIONS',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
+ {name:'AUTO NIGHT',cat:'NIGHT',desc:'Hard blacks, warm practicals, red glow',use:'CARS · NIGHT',filter:'contrast(1.30) saturate(.92) brightness(.88) sepia(.04)',thumb:'./assets/presets/auto_night.svg'},
+ {name:'ICE DAY',cat:'NATURE',desc:'Clean winter air with subtle cool shadows',use:'WINTER · DAYLIGHT',filter:'contrast(1.03) saturate(.90) brightness(1.04) hue-rotate(8deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'CYAN WINTER',cat:'NATURE',desc:'Deep cyan shade and desaturated snow',use:'SNOW · BLUE HOUR',filter:'contrast(1.17) saturate(.68) brightness(.94) hue-rotate(18deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'SNOW DAY',cat:'NATURE',desc:'Bright white snow with protected skin tones',use:'SNOW · PEOPLE',filter:'contrast(1.06) saturate(.82) brightness(1.08) hue-rotate(7deg)',thumb:'./assets/presets/snow_street.svg'},
+ {name:'DEEP FOREST',cat:'NATURE',desc:'Dark greens, earthy warmth and dense depth',use:'FOREST · MOODY',filter:'contrast(1.18) saturate(.86) brightness(.93) hue-rotate(-10deg)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'NATURE SOFT',cat:'NATURE',desc:'Open shadows, quiet greens, gentle highlights',use:'NATURE · CLOUDY',filter:'contrast(.96) saturate(.86) brightness(1.03)',thumb:'./assets/presets/forest_mist.svg'},
+ {name:'AQUA SUMMER',cat:'NATURE',desc:'Clear aqua water and warm bright skin',use:'SEA · SUMMER',filter:'contrast(1.02) saturate(1.10) brightness(1.03) hue-rotate(5deg)',thumb:'./assets/presets/water_summer.svg'},
+ {name:'PASTEL GLOW',cat:'PEOPLE',desc:'Lifted blacks, creamy highlights, pastel skin',use:'PORTRAIT · SOFT LIGHT',filter:'contrast(.88) saturate(.82) brightness(1.08) sepia(.08)',thumb:'./assets/presets/pastel_day.svg'},
+ {name:'WARM NATURAL',cat:'PEOPLE',desc:'Warm neutral skin with gentle contrast',use:'PEOPLE · HOME',filter:'contrast(.98) saturate(.94) brightness(1.03) sepia(.10)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'AUTUMN GOLD',cat:'NATURE',desc:'Golden highlights and controlled yellow-green',use:'AUTUMN · GOLDEN HOUR',filter:'contrast(.98) saturate(1.00) brightness(1.03) sepia(.14) hue-rotate(-8deg)',thumb:'./assets/presets/warm_interior.svg'},
+ {name:'CHROME FILM',cat:'FILM',desc:'Muted chrome colour with cool shadow bias',use:'STREET · DAYLIGHT',filter:'contrast(1.12) saturate(.90) brightness(.98) sepia(.08) hue-rotate(-3deg)',thumb:'./assets/presets/classic_city.svg'},
+ {name:'FUJI MONO',cat:'B&W',desc:'Tonal monochrome with firm mids and fine grain',use:'PORTRAIT · STREET',filter:'grayscale(1) contrast(1.30) brightness(.95)',thumb:'./assets/presets/mono_portrait.svg'},
+ {name:'BLEACH',cat:'B&W',desc:'Silver contrast with almost-drained colour',use:'CINEMA · HARD LIGHT',filter:'contrast(1.42) saturate(.32) brightness(.94)',thumb:'./assets/presets/bleach.svg'}
 ];
 
 function snapshotPresetFrame(){
@@ -691,7 +691,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-presetguide-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-colorscience-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
