@@ -694,7 +694,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-gotham-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-gotham-2',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
