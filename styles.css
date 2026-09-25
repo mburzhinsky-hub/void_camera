@@ -895,3 +895,42 @@ svg{display:block}
 
 /* Film canvas should follow crop/zoom visually */
 .finder-frame #filmCanvas{transform-origin:center}
+
+/* PRESET DECISION CARDS / BUILD 1.2 */
+.preset-preview{
+  position:relative;
+  height:112px;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+}
+.preset-preview-badge{
+  position:absolute;left:7px;top:7px;
+  padding:4px 6px;border-radius:999px;
+  font-size:5px;letter-spacing:.12em;
+  color:#e9e9e6;background:rgba(5,5,5,.58);
+  border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(7px);
+}
+.preset-copy{
+  min-height:63px;
+  display:grid;
+  align-content:start;
+  gap:2px;
+}
+.preset-desc{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.preset-use{
+  display:block;
+  margin-top:3px;
+  color:#b8b8b3;
+  font-size:5.7px;
+  letter-spacing:.075em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.preset-card.active .preset-use{color:#efefec}
