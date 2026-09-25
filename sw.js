@@ -1,12 +1,12 @@
-const CACHE='void-camera-photofix-20260925-1';
+const CACHE='void-camera-gotham-20260925-2';
 const ASSETS=[
   './',
   './index.html',
-  './styles.css?v=20260925-void-photofix-1',
-  './sound-engine.js?v=20260925-void-photofix-1',
-  './mechanical-dial.js?v=20260925-void-photofix-1',
-  './film-engine.js?v=20260925-void-photofix-1',
-  './app.js?v=20260925-void-photofix-1',
+  './styles.css?v=20260925-void-gotham-2',
+  './sound-engine.js?v=20260925-void-gotham-2',
+  './mechanical-dial.js?v=20260925-void-gotham-2',
+  './film-engine.js?v=20260925-void-gotham-2',
+  './app.js?v=20260925-void-gotham-2',
   './manifest.webmanifest',
   './icon.svg',
   './assets/presets/classic_city.svg',
@@ -18,7 +18,8 @@ const ASSETS=[
   './assets/presets/portrait_400.svg',
   './assets/presets/daylight_250.svg',
   './assets/presets/tungsten_500.svg',
-  './assets/presets/bleach.svg'
+  './assets/presets/bleach.svg',
+  './assets/preset-photos/gotham.jpg'
 ];
 
 self.addEventListener('install',event=>{
