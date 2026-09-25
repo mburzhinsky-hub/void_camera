@@ -27,6 +27,39 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare preset reference photography
+        shell: bash
+        run: |
+          set -u
+          mkdir -p assets/preset-photos
+          fetch_photo() {
+            name="$1"
+            id="$2"
+            url="https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1000&h=700&q=84"
+            echo "Fetching $name"
+            curl -fL --retry 2 --retry-delay 1 --connect-timeout 12 "$url" -o "assets/preset-photos/${name}.jpg" || rm -f "assets/preset-photos/${name}.jpg"
+          }
+          fetch_photo void-classic 1518005020951-eccb494ad742
+          fetch_photo noir-city 1519608487953-e999c86e7455
+          fetch_photo cold-cinema 1480714378408-67cf0d13bc1b
+          fetch_photo cinema-25 1449824913935-59a10b8d2000
+          fetch_photo skin-cinema 1506794778202-cad84cf45f1d
+          fetch_photo neon-night 1492684223066-81342ee5ff30
+          fetch_photo rain-gradient 1482192596544-9eb780fc7f66
+          fetch_photo auto-night 1515886657613-9f3515b0c78f
+          fetch_photo ice-day 1493246507139-91e8fad9978e
+          fetch_photo cyan-winter 1504198453319-5ce911bafcde
+          fetch_photo snow-day 1464822759023-fed622ff2c3b
+          fetch_photo deep-forest 1472396961693-142e6e269027
+          fetch_photo nature-soft 1441974231531-c6227db76b6e
+          fetch_photo aqua-summer 1507525428034-b723cf961d3e
+          fetch_photo pastel-glow 1490750967868-88aa4486c946
+          fetch_photo warm-natural 1501183638710-841dd1904471
+          fetch_photo autumn-gold 1472214103451-9374bd1c798e
+          fetch_photo chrome-film 1500534314209-a25ddb2bd429
+          fetch_photo fuji-mono 1500648767791-00dcc994a43e
+          fetch_photo bleach 1522202176988-66273c2fd55f
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
