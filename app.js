@@ -315,7 +315,7 @@ $('focusDistanceSlider').oninput=async e=>{
   const d=caps.focusDistance.min+(caps.focusDistance.max-caps.focusDistance.min)*v;
   try{await track.applyConstraints({advanced:[{focusMode:'manual',focusDistance:d}]})}catch{}
  }
- sliderSound($('focusDistanceSlider'),v);
+ sound?.focusStep?.();
 };
 
 $('meteringCard').onclick=()=>{
