@@ -109,6 +109,7 @@
       if(!this.allow('lever-latch',180))return;
       this.noise(0,.032,.028,620,4200);this.tone(235,0,.115,.035,'triangle',105);this.tone(1240,.043,.030,.015,'square',980);this.tone(88,.085,.160,.024,'sine',70);
     }
+    launch(){ this.boot(); }
     boot(){
       if(!this.allow('boot',300))return;
       this.tone(86,0,.24,.022,'sine',54);this.tone(520,.035,.095,.013,'sine',760);this.tone(980,.090,.075,.014,'triangle',1380);this.tone(1820,.155,.045,.009,'sine',2080);
