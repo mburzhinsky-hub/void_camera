@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const video=$('cameraVideo'), gate=$('permissionGate'), toast=$('toast');
 const pages=[...document.querySelectorAll('.page')];
-const finder=$('finderFrame'), analysisOverlay=$('analysisOverlay'), analysisCtx=analysisOverlay.getContext('2d');
+const finder=$('finderFrame'), filmCanvas=$('filmCanvas'), analysisOverlay=$('analysisOverlay'), analysisCtx=analysisOverlay.getContext('2d');
 const histCanvas=$('histogramCanvas'), histCtx=histCanvas.getContext('2d');
 const analysisBuffer=$('analysisBuffer'), bufferCtx=analysisBuffer.getContext('2d',{willReadFrequently:true});
 
@@ -12,6 +12,8 @@ let rawEnabled=false,hdrEnabled=false,gridEnabled=true,histEnabled=true,zebraEna
 let currentRatio='4:3', currentZoom=1, currentEV=0, analysisRAF=0;
 let previewISO=100, previewShutter=3, previewWB=5200, focusMode='AF', meteringMode='EVALUATIVE';
 let presetFrameData='';
+let filmEngine=null;
+const mechanicalDials=[];
 const favorites=new Set();
 
 const looks=[
@@ -45,49 +47,8 @@ function snapshotPresetFrame(){
  }catch(e){return ''}
 }
 
-let audioCtx=null;
-function getAudio(){
- try{
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended') audioCtx.resume();
-  return audioCtx;
- }catch{return null}
-}
-function tone(freq,start,dur,gain=.03,type='triangle',slideTo=null){
- const ctx=getAudio(); if(!ctx)return;
- const o=ctx.createOscillator(),g=ctx.createGain(),now=ctx.currentTime;
- o.type=type;o.frequency.setValueAtTime(freq,now+start);
- if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,now+start+dur*.9);
- g.gain.setValueAtTime(.0001,now+start);
- g.gain.exponentialRampToValueAtTime(gain,now+start+.004);
- g.gain.exponentialRampToValueAtTime(.0001,now+start+dur);
- o.connect(g).connect(ctx.destination);o.start(now+start);o.stop(now+start+dur+.01);
-}
-function noiseBurst(start=.0,dur=.02,gain=.018,highpass=1200){
- const ctx=getAudio(); if(!ctx)return;
- const n=Math.max(1,Math.floor(ctx.sampleRate*dur));
- const b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);
- for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
- const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),now=ctx.currentTime;
- src.buffer=b;f.type='highpass';f.frequency.value=highpass;g.gain.value=gain;
- src.connect(f).connect(g).connect(ctx.destination);src.start(now+start);
-}
-const sound={
- soft(){ tone(1280,0,.018,.012,'square',980); },
- toggleOn(){ tone(760,0,.028,.026,'triangle',1040);tone(1320,.024,.024,.018,'square');noiseBurst(.0,.015,.008,1800); },
- toggleOff(){ tone(980,0,.028,.022,'triangle',620);tone(420,.026,.035,.018,'sine'); },
- detent(){ noiseBurst(0,.012,.012,2200);tone(1180,0,.022,.014,'triangle',920); },
- majorDetent(){ noiseBurst(0,.016,.018,1500);tone(520,0,.042,.028,'triangle',430);tone(1420,.014,.02,.012,'square'); },
- preset(){ tone(420,0,.07,.018,'sine',620);tone(760,.035,.07,.02,'triangle',960);tone(1240,.07,.045,.012,'sine'); },
- cameraFlip(){ tone(420,0,.055,.024,'triangle',720);tone(920,.045,.045,.018,'triangle',520); },
- focus(){ tone(880,0,.028,.016,'sine');tone(1320,.038,.034,.014,'sine'); },
- shutter(){ noiseBurst(0,.024,.030,900);tone(180,0,.045,.032,'triangle',120);noiseBurst(.048,.022,.024,700);tone(120,.05,.05,.026,'sine',90); },
- error(){ tone(220,0,.07,.03,'square',170);tone(150,.055,.06,.022,'sine'); },
- leverRatchet(step=0){ const base=700+(step%4)*80;noiseBurst(0,.012,.016,1300);tone(base,0,.022,.015,'triangle',base*.78); },
- leverLatch(){ noiseBurst(0,.03,.032,700);tone(240,0,.11,.04,'triangle',110);tone(1280,.045,.028,.018,'square');tone(92,.08,.15,.03,'sine'); },
- launch(){ tone(140,0,.16,.025,'sine',82);tone(980,.035,.04,.018,'triangle',1320);tone(1680,.09,.025,.012,'square'); }
-};
-
+const sound=window.VoidSound;
+function getAudio(){ return sound?.unlock?.(); }
 function showPage(id){
  pages.forEach(p=>p.classList.toggle('active',p.id===id));
  if(id==='presetsPage'){ pendingLook=activeLook; snapshotPresetFrame(); renderPresets(); }
@@ -120,7 +81,15 @@ function buildPreviewFilter(){
 function applyLook(){
  $('activeLookReadout').textContent=activeLook;
  $('colorCardValue').textContent=activeLook;
- video.style.filter=buildPreviewFilter();
+ if(filmEngine && filmEngine.ready){
+   filmEngine.setLook(activeLook);
+   filmEngine.setControls({iso:previewISO,shutterIndex:previewShutter,wb:previewWB,ev:currentEV,hdr:hdrEnabled});
+   filmCanvas.classList.add('active');
+   video.style.filter='none';
+ }else{
+   filmCanvas?.classList.remove('active');
+   video.style.filter=buildPreviewFilter();
+ }
 }
 function renderPresets(){
  const grid=$('presetGrid'); grid.innerHTML='';
@@ -130,7 +99,7 @@ function renderPresets(){
   card.setAttribute('role','button');card.tabIndex=0;
   const safe=l.name.replace(/'/g,"&#39;");
   card.innerHTML=`<div class="preset-preview" style="background-image:url('${l.thumb}');filter:${l.filter}"></div><button class="heart" type="button" aria-label="Favorite ${safe}">♡</button><div class="preset-copy"><b>${l.name}</b><small>${l.desc}</small></div>`;
-  const choose=()=>{pendingLook=l.name;renderPresets();tick('major')};
+  const choose=()=>{pendingLook=l.name;renderPresets();sound?.preset?.()};
   card.onclick=choose;
   card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}};
   const heart=card.querySelector('.heart');
@@ -151,6 +120,8 @@ async function startCamera(){
   stream?.getTracks().forEach(t=>t.stop());
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facingMode},width:{ideal:1920},height:{ideal:1440}},audio:false});
   video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];
+  if(!filmEngine && window.VoidFilmEngine) filmEngine=new window.VoidFilmEngine(video,filmCanvas);
+  filmEngine?.start?.();
   gate.classList.add('hidden');inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
  }catch(e){console.error(e);showToast('CAMERA ACCESS NEEDED')}
 }
@@ -259,8 +230,8 @@ function setEV(v){
  currentEV=parseFloat(v);$('evReadout').textContent=currentEV>0?'+'+currentEV.toFixed(1):currentEV.toFixed(1);$('proEvValue').textContent=$('evReadout').textContent;
  const caps=track?.getCapabilities?.()||{};
  if(caps.exposureCompensation)track.applyConstraints({advanced:[{exposureCompensation:currentEV}]}).catch(()=>{});
- else video.style.opacity=Math.max(.62,Math.min(1,1+currentEV*.07));
- sliderSound($('proEvSlider'),currentEV);
+ filmEngine?.setControls?.({ev:currentEV});
+ applyLook();
 }
 $('evSlider').oninput=e=>{
  setEV(e.target.value);
@@ -279,7 +250,7 @@ $('isoSlider').oninput=async e=>{
  previewISO=Math.round(+e.target.value);$('isoValue').textContent=previewISO;$('isoReadout').textContent='ISO '+previewISO;
  const caps=track?.getCapabilities?.()||{};
  if(caps.iso)try{await track.applyConstraints({advanced:[{iso:previewISO}]})}catch{}
- applyLook();sliderSound($('isoSlider'),previewISO);
+ filmEngine?.setControls?.({iso:previewISO});applyLook();
 };
 const shutterValues=['1/4000','1/1000','1/250','1/60','1/15','1/4','1s'];
 const shutterSeconds=[.00025,.001,.004,.0167,.0667,.25,1];
@@ -288,13 +259,13 @@ $('shutterSlider').oninput=async e=>{
  $('shutterValue').textContent=label;$('shutterReadout').textContent=label+' · F1.8';
  const caps=track?.getCapabilities?.()||{};
  if(caps.exposureTime)try{await track.applyConstraints({advanced:[{exposureTime:shutterSeconds[previewShutter]}]})}catch{}
- applyLook();sliderSound($('shutterSlider'),previewShutter);
+ filmEngine?.setControls?.({shutterIndex:previewShutter});applyLook();
 };
 $('wbSlider').oninput=async e=>{
  previewWB=+e.target.value;$('wbValue').textContent=previewWB+'K';
  const caps=track?.getCapabilities?.()||{};
  if(caps.colorTemperature)try{await track.applyConstraints({advanced:[{colorTemperature:previewWB}]})}catch{}
- applyLook();sliderSound($('wbSlider'),previewWB);
+ filmEngine?.setControls?.({wb:previewWB});applyLook();
 };
 
 function toggleState(btn,state){$(btn)?.classList.toggle('active',state)}
@@ -310,9 +281,9 @@ $('stabTool').onclick=()=>{stabEnabled=!stabEnabled;toggleState('stabTool',stabE
 $('rawTool').onclick=$('rawQuick').onclick=()=>{
  rawEnabled=!rawEnabled;toggleState('rawTool',rawEnabled);toggleState('rawQuick',rawEnabled);rawEnabled?sound.toggleOn():sound.toggleOff();
  $('qualityReadout').textContent=rawEnabled?'12MP RAW+JPEG':'12MP JPEG';
- showToast(rawEnabled?'ORIGINAL + LOOK JPEG':'PROCESSED JPEG');tick('major')
+ showToast(rawEnabled?'ORIGINAL + LOOK JPEG':'PROCESSED JPEG')
 };
-$('hdrTool').onclick=$('hdrQuick').onclick=()=>{hdrEnabled=!hdrEnabled;toggleState('hdrTool',hdrEnabled);toggleState('hdrQuick',hdrEnabled);hdrEnabled?sound.toggleOn():sound.toggleOff();applyLook();showToast(hdrEnabled?'HDR LOOK ON':'HDR OFF');tick()};
+$('hdrTool').onclick=$('hdrQuick').onclick=()=>{hdrEnabled=!hdrEnabled;toggleState('hdrTool',hdrEnabled);toggleState('hdrQuick',hdrEnabled);hdrEnabled?sound.toggleOn():sound.toggleOff();applyLook();showToast(hdrEnabled?'HDR LOOK ON':'HDR OFF')};
 
 $('proButton').onclick=()=>showPage('proPage');
 $('resetPro').onclick=()=>{
@@ -393,8 +364,13 @@ function drawOverlays(d,w,h){
 }
 
 function drawCapture(canvas,withLook=true){
+ if(withLook && filmEngine?.ready){
+   filmEngine.setLook(activeLook);
+   filmEngine.setControls({iso:previewISO,shutterIndex:previewShutter,wb:previewWB,ev:currentEV,hdr:hdrEnabled});
+   if(filmEngine.captureTo(canvas,2200)) return;
+ }
  const ctx=canvas.getContext('2d');canvas.width=video.videoWidth;canvas.height=video.videoHeight;
- ctx.filter=withLook?(getComputedStyle(video).filter||'none'):'none';
+ ctx.filter=withLook?buildPreviewFilter():'none';
  const scale=parseFloat((video.style.transform.match(/scale\(([^)]+)\)/)||[])[1]||'1');
  if(scale>1){const sw=canvas.width/scale,sh=canvas.height/scale,sx=(canvas.width-sw)/2,sy=(canvas.height-sh)/2;ctx.drawImage(video,sx,sy,sw,sh,0,0,canvas.width,canvas.height)}
  else ctx.drawImage(video,0,0,canvas.width,canvas.height);
@@ -561,16 +537,33 @@ function buildMainEV(){
 }
 
 function syncAllCustomControls(){
- document.querySelectorAll('.pro-range').forEach(syncCustomSlider);
+ const focus=$('focusDistanceSlider'); if(focus) syncCustomSlider(focus);
+ mechanicalDials.forEach(d=>d.syncFromInput());
  syncMainEV();
 }
+
+function initMechanicalDials(){
+ if(!window.VoidMechanicalDial)return;
+ const specs=[
+  {id:'isoSlider',values:[50,100,200,400,800,1600],format:v=>String(v),major:v=>[100,200,400,800,1600].includes(v),sound:(v,m)=>sound?.iso?.(m)},
+  {id:'shutterSlider',values:[0,1,2,3,4,5,6],format:v=>shutterValues[v],major:()=>true,sound:()=>sound?.shutterStep?.()},
+  {id:'wbSlider',values:[2500,3200,4000,4500,5200,6000,7000,8000,9000],format:v=>v+'K',major:v=>[3200,5200,7000].includes(v),sound:(v,m)=>sound?.wb?.(m)},
+  {id:'proEvSlider',values:[-3,-2.5,-2,-1.5,-1,-.5,0,.5,1,1.5,2,2.5,3],format:v=>(v>0?'+':'')+v.toFixed(1),major:v=>Number.isInteger(v),sound:(v,m)=>sound?.ev?.(m)}
+ ];
+ specs.forEach(spec=>{
+  const input=$(spec.id);if(!input)return;
+  const dial=new window.VoidMechanicalDial(input,spec);
+  mechanicalDials.push(dial);
+ });
+}
 function initCustomControls(){
- document.querySelectorAll('.pro-range').forEach(buildCustomSlider);
+ const focus=$('focusDistanceSlider');
+ if(focus) buildCustomSlider(focus);
  buildMainEV();
 }
 
-renderPresets();applyLook();syncGrid(true);syncHist(true);initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-layoutfix-1',{updateViaCache:'none'}).catch(()=>{}));
+renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-core-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
