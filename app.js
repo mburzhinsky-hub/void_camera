@@ -122,7 +122,7 @@ async function startCamera(){
   video.srcObject=stream;await video.play();track=stream.getVideoTracks()[0];
   if(!filmEngine && window.VoidFilmEngine) filmEngine=new window.VoidFilmEngine(video,filmCanvas);
   filmEngine?.start?.();
-  gate.classList.add('hidden');inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
+  gate.classList.add('hidden');analysisCtx.clearRect(0,0,analysisOverlay.width,analysisOverlay.height);analysisOverlay.style.opacity=(zebraEnabled||peakingEnabled)?'1':'0';inspectCapabilities();applyLook();runAnalysis();showToast('CAMERA LIVE');
  }catch(e){console.error(e);showToast('CAMERA ACCESS NEEDED')}
 }
 const lever=$('launchLever'),leverHandle=$('startCameraButton'),leverLabel=$('launchLeverLabel');
@@ -357,10 +357,58 @@ function drawHistogram(d){
  bins.forEach((v,i)=>{const x=i/(bins.length-1)*histCanvas.width,y=histCanvas.height-(v/max)*(histCanvas.height-5);if(i===0)histCtx.moveTo(x,y);else histCtx.lineTo(x,y)});histCtx.stroke();
 }
 function drawOverlays(d,w,h){
- const rect=finder.getBoundingClientRect();analysisOverlay.width=rect.width*devicePixelRatio;analysisOverlay.height=rect.height*devicePixelRatio;
- analysisCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);analysisCtx.clearRect(0,0,rect.width,rect.height);
- if(zebraEnabled){analysisCtx.strokeStyle='rgba(255,255,255,.55)';analysisCtx.lineWidth=1;for(let y=0;y<h;y+=3)for(let x=0;x<w;x+=3){const i=(y*w+x)*4,lum=(d[i]+d[i+1]+d[i+2])/3;if(lum>225){const px=x/w*rect.width,py=y/h*rect.height;analysisCtx.beginPath();analysisCtx.moveTo(px-3,py+3);analysisCtx.lineTo(px+3,py-3);analysisCtx.stroke()}}}
- if(peakingEnabled){analysisCtx.fillStyle='rgba(255,255,255,.65)';for(let y=1;y<h-1;y+=3)for(let x=1;x<w-1;x+=3){const i=(y*w+x)*4,ir=(y*w+x+1)*4,id=((y+1)*w+x)*4;const g=Math.abs(d[i]-d[ir])+Math.abs(d[i+1]-d[ir+1])+Math.abs(d[i+2]-d[ir+2])+Math.abs(d[i]-d[id])+Math.abs(d[i+1]-d[id+1])+Math.abs(d[i+2]-d[id+2]);if(g>180)analysisCtx.fillRect(x/w*rect.width,y/h*rect.height,1.6,1.6)}}
+ const rect=finder.getBoundingClientRect();
+ analysisOverlay.width=rect.width*devicePixelRatio;
+ analysisOverlay.height=rect.height*devicePixelRatio;
+ analysisCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ analysisCtx.clearRect(0,0,rect.width,rect.height);
+
+ if(!zebraEnabled && !peakingEnabled){
+   analysisOverlay.style.opacity='0';
+   return;
+ }
+ analysisOverlay.style.opacity='1';
+
+ const lumAt=(x,y)=>{
+   const i=(y*w+x)*4;
+   return d[i]*.2126+d[i+1]*.7152+d[i+2]*.0722;
+ };
+
+ if(zebraEnabled){
+   analysisCtx.strokeStyle='rgba(255,255,255,.28)';
+   analysisCtx.lineWidth=.85;
+   const cell=6;
+   for(let y=2;y<h-2;y+=cell){
+     for(let x=2;x<w-2;x+=cell){
+       const l0=lumAt(x,y),l1=lumAt(Math.min(w-1,x+2),y),l2=lumAt(x,Math.min(h-1,y+2)),l3=lumAt(Math.min(w-1,x+2),Math.min(h-1,y+2));
+       const avg=(l0+l1+l2+l3)*.25;
+       if(avg>246){
+         const px=x/w*rect.width,py=y/h*rect.height;
+         const sx=cell/w*rect.width,sy=cell/h*rect.height;
+         analysisCtx.beginPath();
+         analysisCtx.moveTo(px-sx*.15,py+sy*.85);
+         analysisCtx.lineTo(px+sx*.85,py-sy*.15);
+         analysisCtx.stroke();
+       }
+     }
+   }
+ }
+
+ if(peakingEnabled){
+   analysisCtx.fillStyle='rgba(255,255,255,.34)';
+   for(let y=2;y<h-2;y+=4){
+     for(let x=2;x<w-2;x+=4){
+       const gx=Math.abs(lumAt(x+1,y)-lumAt(x-1,y));
+       const gy=Math.abs(lumAt(x,y+1)-lumAt(x,y-1));
+       const edge=gx+gy;
+       const lum=lumAt(x,y);
+       if(edge>92 && lum>24 && lum<238){
+         const px=x/w*rect.width,py=y/h*rect.height;
+         analysisCtx.fillRect(px,py,1.05,1.05);
+       }
+     }
+   }
+ }
 }
 
 function drawCapture(canvas,withLook=true){
@@ -563,7 +611,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-orientation-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-artifactfix-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
