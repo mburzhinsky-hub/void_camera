@@ -1,15 +1,15 @@
 (()=> {
   const PROFILES={
-    'FUJI CLASSIC':{exposure:0.02,contrast:1.10,saturation:.80,temp:.035,tint:-.01,shadows:.035,highlights:-.10,fade:.025,grain:.030,vignette:.10,halation:.018,mono:0},
-    'FUJI SOFT':{exposure:.08,contrast:.86,saturation:.78,temp:.025,tint:.015,shadows:.09,highlights:-.16,fade:.055,grain:.022,vignette:.055,halation:.012,mono:0},
-    'FUJI STREET':{exposure:-.04,contrast:1.26,saturation:1.10,temp:-.015,tint:.015,shadows:-.055,highlights:-.055,fade:.010,grain:.038,vignette:.14,halation:.010,mono:0},
-    'FUJI WARM':{exposure:.03,contrast:1.02,saturation:1.04,temp:.12,tint:.015,shadows:.035,highlights:-.12,fade:.030,grain:.028,vignette:.08,halation:.030,mono:0},
-    'FUJI COOL':{exposure:.01,contrast:1.08,saturation:.88,temp:-.11,tint:-.025,shadows:.018,highlights:-.07,fade:.018,grain:.024,vignette:.075,halation:.006,mono:0},
-    'FUJI MONO':{exposure:-.015,contrast:1.28,saturation:0,temp:0,tint:0,shadows:-.02,highlights:-.08,fade:.018,grain:.055,vignette:.12,halation:0,mono:1},
-    'PORTRAIT 400':{exposure:.07,contrast:.92,saturation:.90,temp:.065,tint:.020,shadows:.07,highlights:-.18,fade:.045,grain:.026,vignette:.06,halation:.018,mono:0},
-    'DAYLIGHT 250':{exposure:.035,contrast:.94,saturation:.84,temp:.045,tint:-.008,shadows:.055,highlights:-.18,fade:.035,grain:.028,vignette:.08,halation:.015,mono:0},
-    'TUNGSTEN 500':{exposure:-.055,contrast:1.14,saturation:1.00,temp:-.14,tint:.035,shadows:-.01,highlights:-.08,fade:.02,grain:.050,vignette:.14,halation:.060,mono:0},
-    'BLEACH':{exposure:-.02,contrast:1.38,saturation:.34,temp:.00,tint:0,shadows:-.05,highlights:-.04,fade:.012,grain:.045,vignette:.13,halation:.004,mono:0}
+    'FUJI CLASSIC':{exposure:0.02,contrast:1.10,saturation:.80,temp:.035,tint:-.01,shadows:.035,highlights:-.10,fade:.025,grain:.018,vignette:.10,halation:.018,mono:0},
+    'FUJI SOFT':{exposure:.08,contrast:.86,saturation:.78,temp:.025,tint:.015,shadows:.09,highlights:-.16,fade:.055,grain:.014,vignette:.055,halation:.012,mono:0},
+    'FUJI STREET':{exposure:-.04,contrast:1.26,saturation:1.10,temp:-.015,tint:.015,shadows:-.055,highlights:-.055,fade:.010,grain:.022,vignette:.14,halation:.010,mono:0},
+    'FUJI WARM':{exposure:.03,contrast:1.02,saturation:1.04,temp:.12,tint:.015,shadows:.035,highlights:-.12,fade:.030,grain:.017,vignette:.08,halation:.030,mono:0},
+    'FUJI COOL':{exposure:.01,contrast:1.08,saturation:.88,temp:-.11,tint:-.025,shadows:.018,highlights:-.07,fade:.018,grain:.015,vignette:.075,halation:.006,mono:0},
+    'FUJI MONO':{exposure:-.015,contrast:1.28,saturation:0,temp:0,tint:0,shadows:-.02,highlights:-.08,fade:.018,grain:.028,vignette:.12,halation:0,mono:1},
+    'PORTRAIT 400':{exposure:.07,contrast:.92,saturation:.90,temp:.065,tint:.020,shadows:.07,highlights:-.18,fade:.045,grain:.016,vignette:.06,halation:.018,mono:0},
+    'DAYLIGHT 250':{exposure:.035,contrast:.94,saturation:.84,temp:.045,tint:-.008,shadows:.055,highlights:-.18,fade:.035,grain:.017,vignette:.08,halation:.015,mono:0},
+    'TUNGSTEN 500':{exposure:-.055,contrast:1.14,saturation:1.00,temp:-.14,tint:.035,shadows:-.01,highlights:-.08,fade:.02,grain:.026,vignette:.14,halation:.060,mono:0},
+    'BLEACH':{exposure:-.02,contrast:1.38,saturation:.34,temp:.00,tint:0,shadows:-.05,highlights:-.04,fade:.012,grain:.024,vignette:.13,halation:.004,mono:0}
   };
 
   const VERT=`
@@ -37,7 +37,7 @@
     uniform float u_halation;
     uniform float u_mono;
 
-    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7))+u_time*13.7)*43758.5453123);}
+    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
     vec3 sat(vec3 c,float s){
       float l=dot(c,vec3(.2126,.7152,.0722));
       return mix(vec3(l),c,s);
