@@ -15,17 +15,19 @@ let presetFrameData='';
 const presetThumbCache=new Map();
 let presetThumbGeneration=0;
 const presetPhotoMap={
- 'VOID CLASSIC':'Use as the neutral house look. Expose normally; it protects highlights without making shadows flat.','NOIR CITY':'noir-city','COLD CINEMA':'cold-cinema','CINEMA 25':'cinema-25',
- 'SKIN CINEMA':'Prioritise the face. Keep WB close to neutral and avoid clipping cheeks or forehead highlights.','NEON NIGHT':'neon-night','RAIN GRADIENT':'rain-gradient','AUTO NIGHT':'auto-night',
- 'ICE DAY':'Works in bright cold daylight. Add a little exposure only if snow starts looking grey.','CYAN WINTER':'cyan-winter','SNOW DAY':'snow-day','DEEP FOREST':'deep-forest',
- 'NATURE SOFT':'Use when the scene already has strong texture. It opens shadows and reduces highlight bite.','AQUA SUMMER':'aqua-summer','PASTEL GLOW':'pastel-glow','WARM NATURAL':'warm-natural',
- 'AUTUMN GOLD':'Best with existing yellow-green foliage or late sun. Avoid scenes already dominated by orange light.','CHROME FILM':'chrome-film','FUJI MONO':'fuji-mono','BLEACH':'bleach'
+ 'VOID CLASSIC':'void-classic','NOIR CITY':'noir-city','COLD CINEMA':'cold-cinema','CINEMA 25':'cinema-25',
+ 'GOTHAM':'gotham',
+ 'SKIN CINEMA':'skin-cinema','NEON NIGHT':'neon-night','RAIN GRADIENT':'rain-gradient','AUTO NIGHT':'auto-night',
+ 'ICE DAY':'ice-day','CYAN WINTER':'cyan-winter','SNOW DAY':'snow-day','DEEP FOREST':'deep-forest',
+ 'NATURE SOFT':'nature-soft','AQUA SUMMER':'aqua-summer','PASTEL GLOW':'pastel-glow','WARM NATURAL':'warm-natural',
+ 'AUTUMN GOLD':'autumn-gold','CHROME FILM':'chrome-film','FUJI MONO':'fuji-mono','BLEACH':'bleach'
 };
 const presetTips={
  'VOID CLASSIC':'Use in neutral daylight when you want one reliable film look without pushing skin or skies too far.',
  'NOIR CITY':'Underexpose slightly. Let street lamps and windows stay bright while the blacks remain dense.',
  'COLD CINEMA':'Keep white balance neutral. Best on concrete, glass and grey skies where cool shadows can separate cleanly.',
  'CINEMA 25':'Expose a touch low. It is built for mixed daylight and skin, with warmer highlights against greener shadows.',
+ 'GOTHAM':'Expose slightly under. Built for city, cars, glass and low sun: cool-neutral shadows stay dense while bright reflections move into copper-amber light.',
  'SKIN CINEMA':'Designed for faces. Keep white balance close to neutral and avoid clipping highlights on skin.',
  'NEON NIGHT':'Expose for the signs, not the shadows. The profile is designed to keep saturated neon from turning white.',
  'RAIN GRADIENT':'Use after rain or around reflective surfaces. Blue-violet shadows and warm reflections are the point of the look.',
@@ -52,6 +54,7 @@ const looks=[
  {name:'NOIR CITY',cat:'CINEMA',desc:'Dense shadows, muted colour, warm lamps',use:'CITY · LOW LIGHT',filter:'contrast(1.22) saturate(.62) brightness(.90) hue-rotate(-5deg)',thumb:'./assets/presets/classic_city.svg'},
  {name:'COLD CINEMA',cat:'CINEMA',desc:'Steel-blue shadows with neutral highlights',use:'ARCHITECTURE · OVERCAST',filter:'contrast(1.15) saturate(.72) brightness(.95) hue-rotate(10deg)',thumb:'./assets/presets/daylight_250.svg'},
  {name:'CINEMA 25',cat:'CINEMA',desc:'Green-grey shadows, warm skin and firm blacks',use:'STREET · CINEMATIC',filter:'contrast(1.18) saturate(.82) brightness(.96) sepia(.05) hue-rotate(-6deg)',thumb:'./assets/presets/street_urban.svg'},
+ {name:'GOTHAM',cat:'CINEMA',desc:'Copper highlights, dense blacks, cool-neutral city shadows',use:'CITY · SUNSET · CARS',filter:'contrast(1.20) saturate(.84) brightness(.96) sepia(.04)',thumb:'./assets/preset-photos/gotham.jpg'},
  {name:'SKIN CINEMA',cat:'PEOPLE',desc:'Protected skin, soft shoulder, restrained contrast',use:'PORTRAIT · SKIN',filter:'contrast(1.08) saturate(.92) brightness(1.02) sepia(.05)',thumb:'./assets/presets/portrait_400.svg'},
  {name:'NEON NIGHT',cat:'NIGHT',desc:'Magenta-cyan neon with deep wet blacks',use:'NIGHT · NEON',filter:'contrast(1.28) saturate(1.20) brightness(.92) hue-rotate(14deg)',thumb:'./assets/presets/neon_rain.svg'},
  {name:'RAIN GRADIENT',cat:'NIGHT',desc:'Cool shadows, violet mids, warm reflections',use:'RAIN · REFLECTIONS',filter:'contrast(1.20) saturate(1.04) brightness(.94) hue-rotate(9deg)',thumb:'./assets/presets/neon_rain.svg'},
@@ -691,7 +694,7 @@ function initCustomControls(){
 }
 
 renderPresets();applyLook();syncGrid(true);syncHist(true);initMechanicalDials();initCustomControls();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-photofix-1',{updateViaCache:'none'}).catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20260925-void-gotham-1',{updateViaCache:'none'}).catch(()=>{}));
 
 const presetMenu=$('presetMenuButton');
 if(presetMenu) presetMenu.onclick=()=>{
